@@ -1,0 +1,7 @@
+<gresources>
+  <gresource prefix="/id/my/oisanjaya/medius">
+    <file>medius.ui</file>
+    <file>medius.css</file>
+    <file>icons/app-icon.png</file>
+  </gresource>
+</gresources>

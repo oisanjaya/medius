@@ -1,0 +1,153 @@
+width 350
+margin 10
+padding 10
+spacing 10
+close_timeout 500
+animation_duration 500
+rounded_corner 10
+
+rows {
+    playerctlimg {
+        height 150
+        enabled {
+            interval 2
+            command "/home/oisanjaya/.config/wlayerpanel/playerctlenabled.sh"
+        }
+        image {
+            label {
+                interval 2
+                command "playerctl metadata | grep -oP 'xesam:title.*' | awk -v n=2 '{ for (i=n; i<=NF; i++) printf \"%s%s\", $i, (i<NF ? OFS : ORS)}'"
+            }
+            get_state {
+                interval 2
+                command "playerctl metadata | grep -oP 'mpris:artUrl.*' | awk '{print $2}'"
+            }
+        }
+    }
+
+    playerctlcontrol {
+        button {
+            label "<"
+            on_click_on "playerctl previous"
+        }
+        button {
+            label "o"
+            on_click_on "playerctl play-pause"
+        }
+        button {
+            label ">"
+            on_click_on "playerctl next"
+        }
+    }
+
+    volume {
+        height 15
+        slider {
+            label hidden "volume"
+            range_low 0
+            range_high 100
+            popover_menu {
+                generate "pactl list short sinks | tail -n +2 | awk '{print $2}'"
+                on_click "%pactl set-default-sink \"%\""
+            }
+            icon_on "audio-volume-high"
+            icon_off "audio-volume-muted"
+            icon_size 15
+            on_click_on "pactl set-sink-mute @DEFAULT_SINK@ 0"
+            on_click_off "pactl set-sink-mute @DEFAULT_SINK@ 1"
+            get_state """
+                echo \
+                    $( \
+                        pactl get-sink-volume @DEFAULT_SINK@  | grep -m 1 -oP '\\d\\d(?=%)' | head -n 1 \
+                    ) "\t" \
+                    $( \
+                        if [ "$(pactl get-sink-mute @DEFAULT_SINK@ | head -n 1)" = "Mute: no" ]; then echo "1"; else echo "0"; fi \
+                    )
+"""
+            on_change "#pactl set-sink-volume @DEFAULT_SINK@ #%"
+        }
+    }
+
+    mic_volume {
+        height 15
+        slider {
+            label hidden "mic volume"
+            range_low 0
+            range_high 100
+            icon_on "audio-input-microphone"
+            icon_size 15
+            get_state "pactl get-source-volume @DEFAULT_SOURCE@  | grep -m 1 -oP '\\d\\d(?=%)' | head -n 1 "
+            on_change "#pactl set-source-volume @DEFAULT_SOURCE@ #%"
+        }
+    }
+
+    brightness {
+        height 15
+        slider {
+            label hidden "brightness"
+            range_low 0
+            range_high 100
+            icon_on "display-brightness-symbolic"
+            icon_size 15
+            get_state "ddcutil --sleep-multiplier .001 getvcp 10 | grep -oP \"current.*?=\\s*\\K[0-9]+\""
+            on_change "#ddcutil --sleep-multiplier .001 --noverify setvcp 10 #"
+        }
+    }
+
+    wifi_bluetooth {
+        button {
+            label "Wifi"
+            icon_on "network-wireless-connected-symbolic"
+            icon_off "network-wireless-disconnected-symbolic"
+            icon_size 25
+            get_state "[[ \"$(nmcli r wifi | grep -oE '[[:alnum:]]+')\" == \"enabled\" ]] && echo 1 || echo 0"
+            on_click_on "nmcli r wifi on"
+            on_click_off "nmcli r wifi off"
+            expander {
+                wifi_regenerate {
+                    button {
+                        label "re-scan"
+                        on_click_on regenerate_list
+                    }
+                }
+                wifi_list {
+                    list {
+                        label hidden "Select Wifi 3"
+                        hover_color "#aaaaaa7f";
+                        generate "/home/oisanjaya/.config/wlayerpanel/wifilist.sh"
+                        on_click_on regenerate_list "%alacritty -e nmcli --ask dev wifi connect \"%\""
+                        on_click_off regenerate_list "%alacritty -e nmcli --ask dev wifi connect \"%\""
+                    }
+                }
+            }
+        }
+        button {
+            label "Bluetooth"
+            icon_on "bluetooth-symbolic"
+            icon_off "bluetooth-disabled-inactive"
+            icon_size 25
+            get_state "[[ \"$(bluetoothctl show | grep -oP \"^\\s+?Powered: \\w+\" | grep -oP \"\\w+?$\" )\" == \"yes\" ]] && echo 1 || echo 0"
+            on_click_on "bluetoothctl power on"
+            on_click_off "bluetoothctl power off"
+            expander {
+                bluetooth_regenerate {
+                    button {
+                        label "re-scan"
+                        on_click_on regenerate_list
+                    }
+                }
+                bluetooth_list {
+                    list {
+                        label hidden "Bluetooth Devices"
+                        hover_color "#aaaaaa7f";
+                        generate "/home/oisanjaya/.config/wlayerpanel/bluetoothlist.sh"
+                        on_click_on "%bluetoothctl disconnect \"%\""
+                        on_click_off "%bluetoothctl connect \"%\""
+                    }
+                }
+            }
+        }
+    }
+
+
+}

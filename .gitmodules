@@ -1,0 +1,3 @@
+[submodule "include/Lyra"]
+	path = include/Lyra
+	url = https://github.com/bfgroup/Lyra.git
