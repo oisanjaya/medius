@@ -267,8 +267,8 @@ SliderWidget::SliderWidget(config::RowItem* row_item_parent,
                              label_,
                              state_result_);
                 spdlog::debug("filed.size(): {}", fields.size());
-                spdlog::debug("fileds[0]: '{}'", fields[0]);
-                spdlog::debug("fileds[1]: '{}'", fields[1]);
+                spdlog::debug("fileds[0]: '{}'", fields.size() > 0 ? fields[0] : "no field");
+                spdlog::debug("fileds[1]: '{}'", fields.size() > 1 ? fields[1] : "no field");
             }
             if (typeid(*slider_button_) == typeid(Gtk::Button)) {
                 auto button_widget = static_cast<Gtk::Button*>(slider_button_);
