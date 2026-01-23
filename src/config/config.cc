@@ -19,11 +19,8 @@ namespace fs = std::filesystem;
 namespace config {
 
 const std::vector<std::string> Config::CONFIG_DIRS = {
-    "$XDG_CONFIG_HOME/medius/",
-    "$HOME/.config/medius/",
-    "$HOME/medius/",
-    "/etc/xdg/medius/",
-    "./resources/",
+    "$XDG_CONFIG_HOME/medius/", "$HOME/.config/medius/", "$HOME/medius/",
+    "/etc/xdg/medius/",         "./resources/",
 };
 
 const char* Config::CONFIG_PATH_ENV = "WAYLAYERMENU_CONFIG_DIR";
@@ -207,6 +204,20 @@ Config::load(Gtk::Box* parent_box, const std::string& config)
     margin_ = DEFAULT_PANEL_MARGIN;
 
     for (kdl::Node node : config_) {
+        if (node.name() == u8"anchor") {
+            for (auto anchorargs: node.args()) {
+                if (anchorargs.as<std::u8string>() == u8"left") {
+                    anchor_left_ = true;
+                } else if (anchorargs.as<std::u8string>() == u8"right") {
+                    anchor_right_ = true;
+                } else if (anchorargs.as<std::u8string>() == u8"top") {
+                    anchor_top_ = true;
+                } else if (anchorargs.as<std::u8string>() == u8"bottom") {
+                    anchor_bottom_ = true;
+                }
+            }
+        }
+
         if (node.name() == u8"rows") {
             for (kdl::Node row_node : node.children()) {
                 RowItem* cur_row_item =
@@ -322,6 +333,22 @@ const std::string
 Config::getListItemBoxHoverColor()
 {
     return list_item_box_hover_color_;
+}
+
+bool Config::getAnchorLeft() {
+    return anchor_left_;
+}
+
+bool Config::getAnchorRight() {
+    return anchor_right_;
+}
+
+bool Config::getAnchorTop() {
+    return anchor_top_;
+}
+
+bool Config::getAnchorBottom() {
+    return anchor_bottom_;
 }
 
 }

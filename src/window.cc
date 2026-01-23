@@ -44,8 +44,7 @@ MainWindow::MainWindow()
 {
     auto builder = Gtk::Builder::create();
     try {
-        builder->add_from_resource(
-          "/id/my/oisanjaya/medius/medius.ui");
+        builder->add_from_resource("/id/my/oisanjaya/medius/medius.ui");
     } catch (const Glib::Error& ex) {
         spdlog::error("Error loading UI: {}", ex.what());
         std::exit(-1);
@@ -71,14 +70,6 @@ MainWindow::MainWindow()
     gtk_layer_set_layer(main_window, GTK_LAYER_SHELL_LAYER_TOP);
     gtk_layer_set_keyboard_mode(main_window,
                                 GTK_LAYER_SHELL_KEYBOARD_MODE_ON_DEMAND);
-    gtk_layer_set_anchor(main_window, GTK_LAYER_SHELL_EDGE_RIGHT, TRUE);
-    gtk_layer_set_anchor(main_window, GTK_LAYER_SHELL_EDGE_BOTTOM, TRUE);
-    gtk_layer_set_margin(main_window,
-                         GTK_LAYER_SHELL_EDGE_RIGHT,
-                         helper::main_config.getPanelMargin());
-    gtk_layer_set_margin(main_window,
-                         GTK_LAYER_SHELL_EDGE_BOTTOM,
-                         helper::main_config.getPanelMargin());
 
     set_default_size(helper::main_config.getPanelWidth(), -1);
 
@@ -92,6 +83,31 @@ MainWindow::MainWindow()
     main_box->set_valign(Gtk::Align::START);
 
     helper::main_config.load(main_box, helper::cli_config.config_opt);
+
+    if (helper::main_config.getAnchorLeft()) {
+        gtk_layer_set_anchor(main_window, GTK_LAYER_SHELL_EDGE_LEFT, TRUE);
+        gtk_layer_set_margin(main_window,
+                             GTK_LAYER_SHELL_EDGE_LEFT,
+                             helper::main_config.getPanelMargin());
+    }
+    if (helper::main_config.getAnchorRight()) {
+        gtk_layer_set_anchor(main_window, GTK_LAYER_SHELL_EDGE_RIGHT, TRUE);
+        gtk_layer_set_margin(main_window,
+                             GTK_LAYER_SHELL_EDGE_RIGHT,
+                             helper::main_config.getPanelMargin());
+    }
+    if (helper::main_config.getAnchorTop()) {
+        gtk_layer_set_anchor(main_window, GTK_LAYER_SHELL_EDGE_TOP, TRUE);
+        gtk_layer_set_margin(main_window,
+                             GTK_LAYER_SHELL_EDGE_TOP,
+                             helper::main_config.getPanelMargin());
+    }
+    if (helper::main_config.getAnchorBottom()) {
+        gtk_layer_set_anchor(main_window, GTK_LAYER_SHELL_EDGE_BOTTOM, TRUE);
+        gtk_layer_set_margin(main_window,
+                             GTK_LAYER_SHELL_EDGE_BOTTOM,
+                             helper::main_config.getPanelMargin());
+    }
 
     if (main_box) {
         main_box->set_spacing(helper::main_config.getChildSpacing());

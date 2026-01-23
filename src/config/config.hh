@@ -11,6 +11,10 @@ namespace config {
 class Config
 {
     int width_, margin_, spacing_, animation_duration_, rounded_corner_;
+    bool anchor_left_{false};
+    bool anchor_right_{false};
+    bool anchor_top_{false};
+    bool anchor_bottom_{false};
     int padding_{ DEFAULT_PANEL_PADDING };
     int close_timeout_{ -1 };
     std::string list_item_box_hover_color_{ DEFAULT_LIST_ITEM_BOX_HOVER_COLOR };
@@ -45,6 +49,10 @@ class Config
     int getAnimationDuration();
     int getRoundedCorner();
     int getCloseTimeout();
+    bool getAnchorLeft();
+    bool getAnchorRight();
+    bool getAnchorTop();
+    bool getAnchorBottom();
     const std::string getListItemBoxHoverColor();
 };
 } // namespace config
