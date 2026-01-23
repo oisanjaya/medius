@@ -1,0 +1,4 @@
+[wrap-git]
+directory = ckdl
+url = https://github.com/tjol/ckdl.git
+revision = main
