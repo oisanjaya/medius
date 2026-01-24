@@ -55,10 +55,10 @@ replaceString(std::string hay, std::string needle, std::string replacement)
     return ret_str;
 }
 
-LabelOrDynamicCommandTuple
-labelOrDynamicCommand(kdl::Node child)
+StaticOrDynamicCommandTuple
+staticOrDynamicCommand(kdl::Node child)
 {
-    LabelOrDynamicCommandTuple retval(false, "", -1);
+    StaticOrDynamicCommandTuple retval(false, "", -1);
 
     if (child.children().size() > 0) {
         std::get<0>(retval) = true;

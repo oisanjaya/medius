@@ -25,10 +25,10 @@ ImageWidget::ImageWidget(config::RowItem* row_item_parent,
               child.args()[0].as<std::u8string>().c_str());
         } else if (child.name() == u8"get_state") {
             std::tie(dynamic_get_state_, get_state_, get_state_interval_) =
-              helper::labelOrDynamicCommand(child);
+              helper::staticOrDynamicCommand(child);
         } else if (child.name() == u8"label") {
             std::tie(dynamic_title_, title_, title_interval_) =
-              helper::labelOrDynamicCommand(child);
+              helper::staticOrDynamicCommand(child);
             label_ = "";
         }
     }

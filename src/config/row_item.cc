@@ -82,7 +82,7 @@ RowItem::RowItem(Gtk::Box* parent_box,
             height_ = child.args()[0].as<int>();
         } else if (child.name() == u8"enabled") {
             std::tie(dynamic_enabled_, enabled_, enabled_interval_) =
-              helper::labelOrDynamicCommand(child);
+              helper::staticOrDynamicCommand(child);
         }
     }
 

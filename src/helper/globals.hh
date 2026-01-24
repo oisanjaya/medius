@@ -5,7 +5,7 @@
 
 namespace helper {
 
-using LabelOrDynamicCommandTuple = std::tuple<bool, std::string, int>;
+using StaticOrDynamicCommandTuple = std::tuple<bool, std::string, int>;
 
 struct CliConfig
 {
@@ -22,6 +22,6 @@ extern const std::string
 executeCommand(const std::string& command, bool clean_new_line = true);
 std::string
 replaceString(std::string hay, std::string needle, std::string replacement);
-LabelOrDynamicCommandTuple labelOrDynamicCommand(kdl::Node child);
+StaticOrDynamicCommandTuple staticOrDynamicCommand(kdl::Node child);
 
 }
