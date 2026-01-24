@@ -3,6 +3,8 @@
 <p align="center">
 </p>
 
+<p align="center"><img width="565" height="542" alt="medius1" src="https://github.com/user-attachments/assets/781486ff-da90-4368-951d-0c1019b5163c" /></p>
+
 <p align="center">
     <a href="#">Getting Started</a> | <a href="#">Configuration</a> | <a href="#">Setup&nbsp;Showcase</a>
 </p>
