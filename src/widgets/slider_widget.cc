@@ -131,6 +131,7 @@ SliderWidget::SliderWidget(config::RowItem* row_item_parent,
             popover_button_ = Gtk::make_managed<Gtk::Button>(">");
             popover_button_->add_css_class("medius-slider-popover-button");
             popover_button_->set_name("medius-slider-popover-button");
+            popover_button_->set_size_request(10, -1);
 
             for (kdl::Node popover_menu_child : popover_menu_node_.children()) {
                 if (popover_menu_child.name() == u8"generate") {

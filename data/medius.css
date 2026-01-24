@@ -48,9 +48,14 @@ medius-slider_label
 .medius-row-expander-button {
     border-radius: 0 var(--rounded-corner) var(--rounded-corner) 0;
     border-left: none;
+    min-width: 10px;
 }
 
 .medius-button-has-expander:focus,
 .medius-row-expander-button:focus {
     outline: none;
+}
+
+.medius-slider-popover-button {
+    min-width: 10px;
 }

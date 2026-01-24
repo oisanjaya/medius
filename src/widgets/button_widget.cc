@@ -111,6 +111,7 @@ ButtonWidget::ButtonWidget(config::RowItem* row_item_parent,
             but_box.append(but_lbl);
         }
         static_cast<Gtk::Button*>(widget_)->set_child(but_box);
+        widget_->set_hexpand();
     } else {
         std::string label_str;
         if (!is_label_hidden_) {
