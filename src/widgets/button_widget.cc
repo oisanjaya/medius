@@ -68,11 +68,9 @@ ButtonWidget::ButtonWidget(config::RowItem* row_item_parent,
         but_img_->set_pixel_size(icon_size_);
     }
 
-    if (icon_on_ != "none") {
+    if (icon_off_ == "none") {
         but_img_->set_from_icon_name(icon_on_);
-    }
-
-    if (icon_off_ != "none") {
+    } else {
         but_img_->set_from_icon_name(icon_off_);
     }
 
