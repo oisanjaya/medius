@@ -13,8 +13,8 @@ class ButtonWidget : public BaseWidget
     std::string on_click_on_;
     std::string on_click_off_;
     std::string get_state_;
-    std::string icon_on_;
-    std::string icon_off_;
+    std::string icon_on_{ "none" };
+    std::string icon_off_{ "none" };
     std::string state_result_;
     mutable std::mutex mtx_get_state_;
     Glib::Dispatcher get_state_dispatcher_;

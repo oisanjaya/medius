@@ -181,9 +181,7 @@ ButtonWidget::connectGtkToggleButtonSignals()
 
     std::thread([this]() {
         std::lock_guard<std::mutex> lock(mtx_get_state_);
-        // row_item_parent_->setSpinner(true);
         state_result_ = helper::executeCommand(get_state_);
-        // row_item_parent_->setSpinner(false);
         get_state_dispatcher_.emit();
     }).detach();
 
