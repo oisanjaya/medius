@@ -14,10 +14,13 @@ namespace widgets {
 
 class SliderWidget : public BaseWidget
 {
+    std::string get_state_;
+    int get_state_interval_{ -1 };
+    bool dynamic_get_state_{ false };
+
     std::string icon_on_{ "none" };
     std::string icon_off_{ "none" };
     std::string on_change_;
-    std::string get_state_;
     std::string on_click_on_;
     std::string on_click_off_;
     std::string state_result_;
@@ -41,6 +44,8 @@ class SliderWidget : public BaseWidget
     ButtonWidget* slider_button_ = nullptr;
     Gtk::Button* popover_button_ = nullptr;
     sigc::connection change_timeout_;
+
+    void regenerateState();
 
   public:
     SliderWidget(config::RowItem* row_item_parent, const kdl::Node& node_data);

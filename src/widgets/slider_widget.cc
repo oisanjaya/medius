@@ -17,7 +17,6 @@
 #include <ranges>
 #include <spdlog/spdlog.h>
 #include <string>
-#include <string_view>
 
 namespace widgets {
 
@@ -39,8 +38,8 @@ SliderWidget::SliderWidget(config::RowItem* row_item_parent,
             on_click_off_ = reinterpret_cast<const char*>(
               child.args()[0].as<std::u8string>().c_str());
         } else if (child.name() == u8"get_state") {
-            get_state_ = reinterpret_cast<const char*>(
-              child.args()[0].as<std::u8string>().c_str());
+            std::tie(dynamic_get_state_, get_state_, get_state_interval_) =
+              helper::staticOrDynamicCommand(child);
         } else if (child.name() == u8"on_change") {
             on_change_ = reinterpret_cast<const char*>(
               child.args()[0].as<std::u8string>().c_str());
@@ -220,6 +219,43 @@ SliderWidget::SliderWidget(config::RowItem* row_item_parent,
         slider_box->append(*popover_button_);
     }
 
+    if (get_state_interval_ > 0) {
+        Glib::signal_timeout().connect_seconds(
+          [this]() -> bool {
+              regenerateState();
+              return true;
+          },
+          get_state_interval_);
+    } else {
+        regenerateState();
+    }
+}
+
+SliderWidget::~SliderWidget() {}
+
+void
+SliderWidget::onChange()
+{
+    if (change_timeout_ && change_timeout_.connected()) {
+        change_timeout_.disconnect();
+    }
+
+    change_timeout_ = Glib::signal_timeout().connect(
+      [this]() -> bool {
+          std::string value = std::to_string((int)scale_widget_->get_value());
+
+          auto cmd_string = helper::replaceString(
+            on_change_.substr(1), on_change_.substr(0, 1), value);
+
+          std::string result = helper::executeCommand(cmd_string);
+          return false;
+      },
+      DEFAULT_SLIDER_TIMEOUT);
+}
+
+void
+SliderWidget::regenerateState()
+{
     get_state_dispatcher_connection_ = get_state_dispatcher_.connect([this]() {
         std::lock_guard<std::mutex> lock(mtx_get_state_);
 
@@ -293,28 +329,6 @@ SliderWidget::SliderWidget(config::RowItem* row_item_parent,
         state_result_ = helper::executeCommand(get_state_);
         get_state_dispatcher_.emit();
     }).detach();
-}
-
-SliderWidget::~SliderWidget() {}
-
-void
-SliderWidget::onChange()
-{
-    if (change_timeout_ && change_timeout_.connected()) {
-        change_timeout_.disconnect();
-    }
-
-    change_timeout_ = Glib::signal_timeout().connect(
-      [this]() -> bool {
-          std::string value = std::to_string((int)scale_widget_->get_value());
-
-          auto cmd_string = helper::replaceString(
-            on_change_.substr(1), on_change_.substr(0, 1), value);
-
-          std::string result = helper::executeCommand(cmd_string);
-          return false;
-      },
-      DEFAULT_SLIDER_TIMEOUT);
 }
 
 const std::string
