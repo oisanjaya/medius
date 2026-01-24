@@ -44,6 +44,9 @@ class ButtonWidget : public BaseWidget
     const std::string getGetState(void);
     const std::string getIconOn(void);
     const std::string getIconOff(void);
+
+    void setActive(bool active = true);
+
     bool GetRegenerateList();
 
     int getIconSize(void);

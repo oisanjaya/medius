@@ -13,9 +13,11 @@
 #include "helper/globals.hh"
 #include "kdlpp.h"
 #include "widgets/base_widget.hh"
+#include "widgets/button_widget.hh"
 #include <ranges>
 #include <spdlog/spdlog.h>
 #include <string>
+#include <string_view>
 
 namespace widgets {
 
@@ -23,16 +25,6 @@ SliderWidget::SliderWidget(config::RowItem* row_item_parent,
                            const kdl::Node& node_data)
   : BaseWidget(row_item_parent, node_data)
 {
-    auto selectIconName = [this]() {
-        if (icon_on_.length() > 0) {
-            return icon_on_;
-        }
-        if (icon_off_.length() > 0) {
-            return icon_off_;
-        }
-        return std::string("");
-    };
-
     for (kdl::Node child : node_data.children()) {
         if (child.name() == u8"icon_on") {
             icon_on_ = reinterpret_cast<const char*>(
@@ -74,146 +66,158 @@ SliderWidget::SliderWidget(config::RowItem* row_item_parent,
     slider_box->set_valign(Gtk::Align::FILL);
     slider_box->set_halign(Gtk::Align::FILL);
 
-    Gtk::Image slider_image;
-    slider_image.add_css_class("medius-slider-image");
-    slider_image.set_name("medius-slider-image");
-
-    if (selectIconName().length() > 0) {
-        slider_image.set_from_icon_name(selectIconName());
-        if (icon_size_ > 0) {
-            slider_image.set_pixel_size(icon_size_);
-        }
+    if (icon_on_ != "none") {
+        std::string slider_button_node_string{
+            "button {\nlabel hidden "
+            "\"medius-slider-box_" +
+            label_no_space_ + "\"\n" +
+            (icon_off_ != "none" ? ("icon_off \"" + icon_off_ + "\"\n") : "") +
+            (icon_on_ != "none" ? ("icon_on \"" + icon_on_ + "\"\n") : "") +
+            (on_click_on_ != "none" ? ("on_click_on \"" + on_click_on_ + "\"\n")
+                                    : "") +
+            (on_click_off_ != "none"
+               ? ("on_click_off \"" + on_click_off_ + "\"\n")
+               : "") +
+            (icon_size_ > 0 ? ("icon_size " + std::to_string(icon_size_) + "\n")
+                            : "") +
+            "}"
+        };
 
         if (on_click_on_.length() + on_click_off_.length() > 0) {
-            if ((on_click_on_.length() > 0) && (on_click_off_.length() > 0)) {
-                slider_button_ = Gtk::make_managed<Gtk::ToggleButton>();
-            } else {
-                slider_button_ = Gtk::make_managed<Gtk::Button>();
-            }
+            auto slider_button_node =
+              kdl::parse(std::u8string(reinterpret_cast<const char8_t*>(
+                                         slider_button_node_string.data()),
+                                       slider_button_node_string.size()));
 
-            slider_button_->add_css_class("medius-slider-button");
-            slider_button_->set_name("medius-slider-button");
-            slider_button_->set_child(slider_image);
-            slider_box->append(*slider_button_);
+            slider_button_ =
+              new ButtonWidget(nullptr, slider_button_node.nodes()[0]);
+            Gtk::Button* but_widget =
+              static_cast<Gtk::Button*>(slider_button_->getWidget());
+            but_widget->add_css_class("medius-slider-button");
+            but_widget->set_name("medius-slider-button");
+            but_widget->set_hexpand(false);
+
+            slider_box->append(*but_widget);
         } else {
-            slider_box->append(slider_image);
+            Gtk::Image slider_image;
+            slider_image.add_css_class("medius-slider-image");
+            slider_image.set_name("medius-slider-image");
+            slider_image.set_from_icon_name(icon_on_);
+
+            if (icon_on_ != "none") {
+                slider_box->append(slider_image);
+            }
+        }
+    }
+
+    scale_widget_ = new Gtk::Scale{ Gtk::Orientation::HORIZONTAL };
+    scale_widget_->add_css_class("medius-slider-scale");
+    scale_widget_->set_name("medius-slider-scale");
+    scale_widget_->set_range(range_low_, range_high_);
+    scale_widget_->set_increments(1, 1);
+    scale_widget_->set_expand(true);
+
+    scale_widget_->signal_value_changed().connect([this]() { onChange(); });
+
+    Gtk::Box* slider_box_with_label;
+    if (!is_label_hidden_) {
+        Gtk::Label slider_label{ label_ };
+        slider_label.add_css_class("medius-slider_label");
+        slider_label.set_name("medius-slider_label");
+        slider_box_with_label = new Gtk::Box{ Gtk::Orientation::VERTICAL };
+        slider_box_with_label->add_css_class("medius-slider-box-with-label");
+        slider_box_with_label->set_name("medius-slider-box-with-label");
+        slider_box_with_label->set_spacing(
+          helper::main_config.getChildSpacing());
+        slider_box_with_label->append(*scale_widget_);
+        slider_box_with_label->append(slider_label);
+        slider_box->append(*slider_box_with_label);
+    } else {
+        slider_box->append(*scale_widget_);
+    }
+
+    if (popover_menu_node_.children().size() > 0) {
+        popover_button_ = Gtk::make_managed<Gtk::Button>(">");
+        popover_button_->add_css_class("medius-slider-popover-button");
+        popover_button_->set_name("medius-slider-popover-button");
+        popover_button_->set_size_request(10, -1);
+
+        for (kdl::Node popover_menu_child : popover_menu_node_.children()) {
+            if (popover_menu_child.name() == u8"generate") {
+                popover_menu_generate_ = reinterpret_cast<const char*>(
+                  popover_menu_child.args()[0].as<std::u8string>().c_str());
+            } else if (popover_menu_child.name() == u8"on_click") {
+                popover_menu_on_click_ = reinterpret_cast<const char*>(
+                  popover_menu_child.args()[0].as<std::u8string>().c_str());
+            }
         }
 
-        scale_widget_ = new Gtk::Scale{ Gtk::Orientation::HORIZONTAL };
-        scale_widget_->add_css_class("medius-slider-scale");
-        scale_widget_->set_name("medius-slider-scale");
-        scale_widget_->set_range(range_low_, range_high_);
-        scale_widget_->set_increments(1, 1);
-        scale_widget_->set_expand(true);
+        popover_button_->signal_clicked().connect([this]() {
+            helper::disable_lost_focus_quit = true;
+            if (popover_menu_generate_.length() > 0) {
+                popover_menu_ = Gtk::make_managed<Gtk::PopoverMenu>();
 
-        scale_widget_->signal_value_changed().connect([this]() { onChange(); });
+                popover_menu_->signal_closed().connect([this]() {
+                    helper::disable_lost_focus_quit = false;
+                    popover_menu_->unparent();
+                });
 
-        Gtk::Box* slider_box_with_label;
-        if (!is_label_hidden_) {
-            Gtk::Label slider_label{ label_ };
-            slider_label.add_css_class("medius-slider_label");
-            slider_label.set_name("medius-slider_label");
-            slider_box_with_label = new Gtk::Box{ Gtk::Orientation::VERTICAL };
-            slider_box_with_label->add_css_class(
-              "medius-slider-box-with-label");
-            slider_box_with_label->set_name(
-              "medius-slider-box-with-label");
-            slider_box_with_label->set_spacing(
-              helper::main_config.getChildSpacing());
-            slider_box_with_label->append(*scale_widget_);
-            slider_box_with_label->append(slider_label);
-            slider_box->append(*slider_box_with_label);
-        } else {
-            slider_box->append(*scale_widget_);
-        }
+                get_popover_dispatcher_connection_ =
+                  get_popover_dispatcher_.connect([this]() {
+                      std::lock_guard<std::mutex> lock(mtx_get_popover_);
+                      auto popover_menu_box =
+                        Gtk::make_managed<Gtk::Box>(Gtk::Orientation::VERTICAL);
 
-        if (popover_menu_node_.children().size() > 0) {
-            popover_button_ = Gtk::make_managed<Gtk::Button>(">");
-            popover_button_->add_css_class("medius-slider-popover-button");
-            popover_button_->set_name("medius-slider-popover-button");
-            popover_button_->set_size_request(10, -1);
+                      spdlog::debug(
+                        "Slider widget popover; `generate` result: \n{}",
+                        popover_generate_result_);
 
-            for (kdl::Node popover_menu_child : popover_menu_node_.children()) {
-                if (popover_menu_child.name() == u8"generate") {
-                    popover_menu_generate_ = reinterpret_cast<const char*>(
-                      popover_menu_child.args()[0].as<std::u8string>().c_str());
-                } else if (popover_menu_child.name() == u8"on_click") {
-                    popover_menu_on_click_ = reinterpret_cast<const char*>(
-                      popover_menu_child.args()[0].as<std::u8string>().c_str());
-                }
-            }
+                      if (popover_generate_result_.length() > 0) {
+                          std::istringstream stream(popover_generate_result_);
+                          std::string line;
+                          while (std::getline(stream, line)) {
+                              auto popover_menu_item =
+                                Gtk::make_managed<Gtk::Button>(line);
+                              popover_menu_item->set_has_frame(false);
+                              popover_menu_box->append(*popover_menu_item);
 
-            popover_button_->signal_clicked().connect([this]() {
-                helper::disable_lost_focus_quit = true;
-                if (popover_menu_generate_.length() > 0) {
-                    popover_menu_ = Gtk::make_managed<Gtk::PopoverMenu>();
+                              auto menu_command = helper::replaceString(
+                                popover_menu_on_click_.substr(1),
+                                popover_menu_on_click_.substr(0, 1),
+                                line);
 
-                    popover_menu_->signal_closed().connect([this]() {
-                        helper::disable_lost_focus_quit = false;
-                        popover_menu_->unparent();
-                    });
+                              spdlog::debug("!{}!{}",
+                                            popover_menu_on_click_,
+                                            popover_menu_on_click_.substr(1));
 
-                    get_popover_dispatcher_connection_ =
-                      get_popover_dispatcher_.connect([this]() {
-                          std::lock_guard<std::mutex> lock(mtx_get_popover_);
-                          auto popover_menu_box = Gtk::make_managed<Gtk::Box>(
-                            Gtk::Orientation::VERTICAL);
-
-                          spdlog::debug(
-                            "Slider widget popover; `generate` result: \n{}",
-                            popover_generate_result_);
-
-                          if (popover_generate_result_.length() > 0) {
-                              std::istringstream stream(
-                                popover_generate_result_);
-                              std::string line;
-                              while (std::getline(stream, line)) {
-                                  auto popover_menu_item =
-                                    Gtk::make_managed<Gtk::Button>(line);
-                                  popover_menu_item->set_has_frame(false);
-                                  popover_menu_box->append(*popover_menu_item);
-
-                                  auto menu_command = helper::replaceString(
-                                    popover_menu_on_click_.substr(1),
-                                    popover_menu_on_click_.substr(0, 1),
-                                    line);
-
-                                  spdlog::debug(
-                                    "!{}!{}",
-                                    popover_menu_on_click_,
-                                    popover_menu_on_click_.substr(1));
-
-                                  popover_menu_item->signal_clicked().connect(
-                                    [this, menu_command]() {
-                                        helper::executeCommand(menu_command);
-                                        popover_menu_->popdown();
-                                    });
-                              }
+                              popover_menu_item->signal_clicked().connect(
+                                [this, menu_command]() {
+                                    helper::executeCommand(menu_command);
+                                    popover_menu_->popdown();
+                                });
                           }
+                      }
 
-                          popover_menu_->set_child(*popover_menu_box);
-                          popover_menu_->set_parent(
-                            *static_cast<Gtk::Widget*>(popover_button_));
-                          popover_menu_->set_has_arrow(false);
+                      popover_menu_->set_child(*popover_menu_box);
+                      popover_menu_->set_parent(
+                        *static_cast<Gtk::Widget*>(popover_button_));
+                      popover_menu_->set_has_arrow(false);
 
-                          popover_menu_->popup();
+                      popover_menu_->popup();
 
-                          get_popover_dispatcher_connection_.disconnect();
-                      });
+                      get_popover_dispatcher_connection_.disconnect();
+                  });
 
-                    std::thread([this]() {
-                        std::lock_guard<std::mutex> lock(mtx_get_popover_);
-                        // row_item_parent_->setSpinner(true);
-                        popover_generate_result_ =
-                          helper::executeCommand(popover_menu_generate_, false);
-                        // row_item_parent_->setSpinner(false);
-                        get_popover_dispatcher_.emit();
-                    }).detach();
-                }
-            });
+                std::thread([this]() {
+                    std::lock_guard<std::mutex> lock(mtx_get_popover_);
+                    popover_generate_result_ =
+                      helper::executeCommand(popover_menu_generate_, false);
+                    get_popover_dispatcher_.emit();
+                }).detach();
+            }
+        });
 
-            slider_box->append(*popover_button_);
-        }
+        slider_box->append(*popover_button_);
     }
 
     get_state_dispatcher_connection_ = get_state_dispatcher_.connect([this]() {
@@ -245,36 +249,23 @@ SliderWidget::SliderWidget(config::RowItem* row_item_parent,
         }
 
         if (slider_button_) {
-            if ((typeid(*slider_button_) == typeid(Gtk::ToggleButton)) &&
-                ((fields.size() == 2) &&
+            Gtk::Button* but_widget =
+              static_cast<Gtk::Button*>(slider_button_->getWidget());
+            if ((typeid(*but_widget) == typeid(Gtk::ToggleButton)) &&
+                ((fields.size() >= 2) &&
                  ((fields[1] == "1") || (fields[1] == "0")))) {
-                static_cast<Gtk::ToggleButton*>(slider_button_)
+                static_cast<Gtk::ToggleButton*>(but_widget)
                   ->set_active(fields[1] == "1");
-
-                auto button_widget =
-                  static_cast<Gtk::ToggleButton*>(slider_button_);
-                button_widget->signal_toggled().connect(
-                  [this, button_widget]() {
-                      if (button_widget->get_active()) {
-                          helper::executeCommand(this->onClickOn());
-                      } else {
-                          helper::executeCommand(this->onClickOff());
-                      }
-                  });
-
             } else {
                 spdlog::warn("Config file error: Slider {} widget get_state "
                              "output doesn't conform regular pattern:\n{}",
                              label_,
                              state_result_);
                 spdlog::debug("filed.size(): {}", fields.size());
-                spdlog::debug("fileds[0]: '{}'", fields.size() > 0 ? fields[0] : "no field");
-                spdlog::debug("fileds[1]: '{}'", fields.size() > 1 ? fields[1] : "no field");
-            }
-            if (typeid(*slider_button_) == typeid(Gtk::Button)) {
-                auto button_widget = static_cast<Gtk::Button*>(slider_button_);
-                button_widget->signal_clicked().connect(
-                  [this]() { helper::executeCommand(this->onClickOn()); });
+                spdlog::debug("fileds[0]: '{}'",
+                              fields.size() > 0 ? fields[0] : "no field");
+                spdlog::debug("fileds[1]: '{}'",
+                              fields.size() > 1 ? fields[1] : "no field");
             }
         }
 
@@ -299,9 +290,7 @@ SliderWidget::SliderWidget(config::RowItem* row_item_parent,
 
     std::thread([this]() {
         std::lock_guard<std::mutex> lock(mtx_get_state_);
-        // row_item_parent_->setSpinner(true);
         state_result_ = helper::executeCommand(get_state_);
-        // row_item_parent_->setSpinner(false);
         get_state_dispatcher_.emit();
     }).detach();
 }

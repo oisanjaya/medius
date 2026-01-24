@@ -142,7 +142,9 @@ ButtonWidget::ButtonWidget(config::RowItem* row_item_parent,
         expander_button->set_hexpand(false);
 
         expander_button->signal_clicked().connect([this, row_item_parent]() {
-            row_item_parent->toggleExpander(expander_item_);
+            if (row_item_parent) {
+                row_item_parent->toggleExpander(expander_item_);
+            }
         });
 
         button_group_box->append(*expander_button);
@@ -176,7 +178,9 @@ ButtonWidget::connectGtkButtonSignals()
         regenerateState();
 
         if (regenerate_list_) {
-            row_item_parent_->regenerateList();
+            if (row_item_parent_) {
+                row_item_parent_->regenerateList();
+            }
         }
     });
 }
@@ -184,7 +188,8 @@ ButtonWidget::connectGtkButtonSignals()
 void
 ButtonWidget::connectGtkToggleButtonSignals()
 {
-    Gtk::ToggleButton* button_widget = static_cast<Gtk::ToggleButton*>(but_widget_);
+    Gtk::ToggleButton* button_widget =
+      static_cast<Gtk::ToggleButton*>(but_widget_);
     button_widget->signal_toggled().connect([this, button_widget]() {
         if (button_widget->get_active()) {
             helper::executeCommand(this->onClickOn());
@@ -195,7 +200,9 @@ ButtonWidget::connectGtkToggleButtonSignals()
         regenerateState();
 
         if (regenerate_list_) {
-            row_item_parent_->regenerateList();
+            if (row_item_parent_) {
+                row_item_parent_->regenerateList();
+            }
         }
     });
 }
@@ -211,22 +218,7 @@ ButtonWidget::regenerateState()
               int state_number = std::stoi(state_result_);
               bool but_active = state_number > 0;
 
-              if (typeid(*but_widget_) == typeid(Gtk::ToggleButton)) {
-                  static_cast<Gtk::ToggleButton*>(but_widget_)
-                    ->set_active(but_active);
-              }
-
-              if (but_active) {
-                  but_img_->set_from_icon_name(icon_on_);
-              } else {
-                  but_img_->set_from_icon_name(icon_off_);
-              }
-
-              if (but_img_->get_icon_name() == "none") {
-                  but_img_->hide();
-              } else {
-                  but_img_->show();
-              }
+              setActive(but_active);
 
               get_state_dispatcher_connection_.disconnect();
           });
@@ -236,6 +228,26 @@ ButtonWidget::regenerateState()
             state_result_ = helper::executeCommand(get_state_);
             get_state_dispatcher_.emit();
         }).detach();
+    }
+}
+
+void
+ButtonWidget::setActive(bool active)
+{
+    if (typeid(*but_widget_) == typeid(Gtk::ToggleButton)) {
+        static_cast<Gtk::ToggleButton*>(but_widget_)->set_active(active);
+    }
+
+    if (active) {
+        but_img_->set_from_icon_name(icon_on_);
+    } else {
+        but_img_->set_from_icon_name(icon_off_);
+    }
+
+    if (but_img_->get_icon_name() == "none") {
+        but_img_->hide();
+    } else {
+        but_img_->show();
     }
 }
 

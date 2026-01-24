@@ -7,14 +7,15 @@
 #include "kdlpp.h"
 #include "sigc++/connection.h"
 #include "widgets/base_widget.hh"
+#include "widgets/button_widget.hh"
 #include <string>
 
 namespace widgets {
 
 class SliderWidget : public BaseWidget
 {
-    std::string icon_on_;
-    std::string icon_off_;
+    std::string icon_on_{ "none" };
+    std::string icon_off_{ "none" };
     std::string on_change_;
     std::string get_state_;
     std::string on_click_on_;
@@ -37,7 +38,7 @@ class SliderWidget : public BaseWidget
     Gtk::Scale* scale_widget_;
     Gtk::PopoverMenu* popover_menu_;
 
-    Gtk::Button* slider_button_ = nullptr;
+    ButtonWidget* slider_button_ = nullptr;
     Gtk::Button* popover_button_ = nullptr;
     sigc::connection change_timeout_;
 
