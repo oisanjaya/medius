@@ -28,15 +28,15 @@ rows {
 
     playerctlcontrol {
         button {
-            label "<"
+            label "⏮"
             on_click_on "playerctl previous"
         }
         button {
-            label "o"
+            label "⏯"
             on_click_on "playerctl play-pause"
         }
         button {
-            label ">"
+            label "⏭"
             on_click_on "playerctl next"
         }
     }
@@ -56,15 +56,18 @@ rows {
             icon_size 15
             on_click_on "pactl set-sink-mute @DEFAULT_SINK@ 0"
             on_click_off "pactl set-sink-mute @DEFAULT_SINK@ 1"
-            get_state """
-                echo \
-                    $( \
-                        pactl get-sink-volume @DEFAULT_SINK@  | grep -m 1 -oP '\\d\\d(?=%)' | head -n 1 \
-                    ) "\t" \
-                    $( \
-                        if [ "$(pactl get-sink-mute @DEFAULT_SINK@ | head -n 1)" = "Mute: no" ]; then echo "1"; else echo "0"; fi \
-                    )
+            get_state {
+                interval 2
+                command """
+                    echo \
+                        $( \
+                            pactl get-sink-volume @DEFAULT_SINK@  | grep -m 1 -oP '\\d\\d(?=%)' | head -n 1 \
+                        ) "\t" \
+                        $( \
+                            if [ "$(pactl get-sink-mute @DEFAULT_SINK@ | head -n 1)" = "Mute: no" ]; then echo "1"; else echo "0"; fi \
+                        )
 """
+            }
             on_change "#pactl set-sink-volume @DEFAULT_SINK@ #%"
         }
     }
@@ -75,9 +78,24 @@ rows {
             label hidden "mic volume"
             range_low 0
             range_high 100
-            icon_on "audio-input-microphone"
+            popover_menu {
+                generate "pactl list short sources | tail -n +2 | awk '{print $2}'"
+                on_click "%pactl set-default-source \"%\""
+            }
+            icon_on "audio-input-microphone-muted-symbolic"
+            icon_off "audio-input-microphone-symbolic"
             icon_size 15
-            get_state "pactl get-source-volume @DEFAULT_SOURCE@  | grep -m 1 -oP '\\d\\d(?=%)' | head -n 1 "
+            on_click_on "pactl set-source-mute @DEFAULT_SOURCE@ 0"
+            on_click_off "pactl set-source-mute @DEFAULT_SOURCE@ 1"
+            get_state """
+                echo \
+                    $( \
+                        pactl get-source-volume @DEFAULSOURCE@  | grep -m 1 -oP '\\d\\d(?=%)' | head -n 1 \
+                    ) "\t" \
+                    $( \
+                        if [ "$(pactl get-source-mute @DEFAULT_SOURCE@ | head -n 1)" = "Mute: no" ]; then echo "1"; else echo "0"; fi \
+                    )
+"""
             on_change "#pactl set-source-volume @DEFAULT_SOURCE@ #%"
         }
     }
@@ -99,9 +117,12 @@ rows {
         button {
             label "Wifi"
             icon_on "network-wireless-connected-symbolic"
-            icon_off "network-wireless-disconnected-symbolic"
+            icon_off "network-wireless-offline-symbolic"
             icon_size 25
-            get_state "[[ \"$(nmcli r wifi | grep -oE '[[:alnum:]]+')\" == \"enabled\" ]] && echo 1 || echo 0"
+            get_state {
+                interval 2
+                command "[[ \"$(nmcli r wifi | grep -oE '[[:alnum:]]+')\" == \"enabled\" ]] && echo 1 || echo 0"
+            }
             on_click_on "nmcli r wifi on"
             on_click_off "nmcli r wifi off"
             expander {
@@ -124,8 +145,8 @@ rows {
         }
         button {
             label "Bluetooth"
-            icon_on "bluetooth-symbolic"
-            icon_off "bluetooth-disabled-inactive"
+            icon_on "bluetooth"
+            icon_off "bluetooth-inactive"
             icon_size 25
             get_state "[[ \"$(bluetoothctl show | grep -oP \"^\\s+?Powered: \\w+\" | grep -oP \"\\w+?$\" )\" == \"yes\" ]] && echo 1 || echo 0"
             on_click_on "bluetoothctl power on"
