@@ -39,8 +39,8 @@ ButtonWidget::ButtonWidget(config::RowItem* row_item_parent,
         } else if (child.name() == u8"expander") {
             expander_item_ = new ExpanderItem(row_item_parent, child);
         } else if (child.name() == u8"get_state") {
-            get_state_ = reinterpret_cast<const char*>(
-              child.args()[0].as<std::u8string>().c_str());
+            std::tie(dynamic_get_state_, get_state_, get_state_interval_) =
+              helper::staticOrDynamicCommand(child);
         } else if (child.name() == u8"icon_on") {
             icon_on_ = reinterpret_cast<const char*>(
               child.args()[0].as<std::u8string>().c_str());
@@ -60,76 +60,77 @@ ButtonWidget::ButtonWidget(config::RowItem* row_item_parent,
     but_box.set_orientation(Gtk::Orientation::VERTICAL);
     but_box.set_valign(Gtk::Align::CENTER);
     but_box.set_halign(Gtk::Align::CENTER);
-    Gtk::Image but_img;
-    but_img.add_css_class("medius-button-image");
-    but_img.set_name("medius-button-image");
+
+    but_img_ = Gtk::make_managed<Gtk::Image>();
+    but_img_->add_css_class("medius-button-image");
+    but_img_->set_name("medius-button-image");
     if (icon_size_ > 0) {
-        but_img.set_pixel_size(icon_size_);
+        but_img_->set_pixel_size(icon_size_);
     }
 
+    if (icon_on_ != "none") {
+        but_img_->set_from_icon_name(icon_on_);
+    }
+
+    if (icon_off_ != "none") {
+        but_img_->set_from_icon_name(icon_off_);
+    }
+
+    if (but_img_->get_icon_name() == "none") {
+        but_img_->hide();
+    } else {
+        but_img_->show();
+    }
+    but_box.append(*but_img_);
+
+    Gtk::Label but_lbl(label_);
+    but_lbl.add_css_class("medius-button-label");
+    but_lbl.set_name("medius-button-label");
+    if (is_label_hidden_) {
+        but_lbl.hide();
+    } else {
+        but_lbl.show();
+    }
+    but_box.append(but_lbl);
+
     if ((on_click_on_.length() > 0) && (on_click_off_.length() > 0)) {
-        widget_ = Gtk::make_managed<Gtk::ToggleButton>();
+        but_widget_ = Gtk::make_managed<Gtk::ToggleButton>();
         if (expander_item_) {
-            widget_->add_css_class("medius-button-has-expander");
+            but_widget_->add_css_class("medius-button-has-expander");
         } else {
-            widget_->add_css_class("medius-button");
+            but_widget_->add_css_class("medius-button");
         }
-        widget_->add_css_class("medius-button_" + label_no_space_);
-        widget_->set_name("medius-button_" + label_no_space_);
+        but_widget_->add_css_class("medius-button_" + label_no_space_);
+        but_widget_->set_name("medius-button_" + label_no_space_);
         connectGtkToggleButtonSignals();
-        if (icon_on_.length() > 0) {
-            but_img.set_from_icon_name(icon_on_);
-        } else if (icon_off_.length() > 0) {
-            but_img.set_from_icon_name(icon_off_);
-        }
         widget_type_ = "ToggleButton";
     } else {
-        widget_ = Gtk::make_managed<Gtk::Button>();
+        but_widget_ = Gtk::make_managed<Gtk::Button>();
         if (expander_item_) {
-            widget_->add_css_class("medius-button-has-expander");
+            but_widget_->add_css_class("medius-button-has-expander");
         } else {
-            widget_->add_css_class("medius-button");
+            but_widget_->add_css_class("medius-button");
         }
-        widget_->add_css_class("medius-button_" + label_no_space_);
-        widget_->set_name("medius-button_" + label_no_space_);
+        but_widget_->add_css_class("medius-button_" + label_no_space_);
+        but_widget_->set_name("medius-button_" + label_no_space_);
         connectGtkButtonSignals();
         widget_type_ = "Button";
     }
 
-    if (icon_on_.length() + icon_off_.length() > 0) {
-        if (icon_on_.length() > 0) {
-            but_img.set_from_icon_name(icon_on_);
-        } else if (icon_off_.length() > 0) {
-            but_img.set_from_icon_name(icon_off_);
-        }
+    but_widget_->set_child(but_box);
+    but_widget_->set_hexpand();
+    but_widget_->set_hexpand(true);
+    but_widget_->set_halign(Gtk::Align::FILL);
 
-        but_box.append(but_img);
-        if (!is_label_hidden_) {
-            Gtk::Label but_lbl(label_);
-            but_lbl.add_css_class("medius-button-label");
-            but_lbl.set_name("medius-button-label");
-            but_box.append(but_lbl);
-        }
-        static_cast<Gtk::Button*>(widget_)->set_child(but_box);
-        widget_->set_hexpand();
-    } else {
-        std::string label_str;
-        if (!is_label_hidden_) {
-            label_str = label_;
-        }
-        static_cast<Gtk::Button*>(widget_)->set_label(label_str);
-    }
-
-    widget_->set_hexpand(true);
-    widget_->set_halign(Gtk::Align::FILL);
+    regenerateState();
 
     if (expander_item_) {
-        auto button_group_box =
-          Gtk::make_managed<Gtk::Box>(Gtk::Orientation::HORIZONTAL, 0);
+        widget_ = Gtk::make_managed<Gtk::Box>(Gtk::Orientation::HORIZONTAL, 0);
+        auto button_group_box = static_cast<Gtk::Box*>(widget_);
         button_group_box->add_css_class("medius-row-expander-button-box");
         button_group_box->set_name("medius-row-expander-button-box");
         button_group_box->set_spacing(0);
-        button_group_box->append(*widget_);
+        button_group_box->append(*but_widget_);
 
         Gtk::Button* expander_button = Gtk::make_managed<Gtk::Button>(">");
         expander_button->add_css_class("medius-row-expander-button");
@@ -145,9 +146,19 @@ ButtonWidget::ButtonWidget(config::RowItem* row_item_parent,
         });
 
         button_group_box->append(*expander_button);
-        widget_ = button_group_box;
-        widget_->set_hexpand(true);
-        widget_->set_halign(Gtk::Align::FILL);
+        button_group_box->set_hexpand(true);
+        button_group_box->set_halign(Gtk::Align::FILL);
+    } else {
+        widget_ = but_widget_;
+    }
+
+    if (get_state_interval_ > 0) {
+        Glib::signal_timeout().connect_seconds(
+          [this]() -> bool {
+              regenerateState();
+              return true;
+          },
+          get_state_interval_);
     }
 }
 
@@ -156,45 +167,76 @@ ButtonWidget::~ButtonWidget() {}
 void
 ButtonWidget::connectGtkButtonSignals()
 {
-    Gtk::Button* button_widget = static_cast<Gtk::Button*>(widget_);
+    Gtk::Button* button_widget = static_cast<Gtk::Button*>(but_widget_);
     button_widget->signal_clicked().connect([this]() {
         if (this->onClickOn().length() > 0) {
             helper::executeCommand(this->onClickOn());
         }
 
-        row_item_parent_->regenerateList();
+        regenerateState();
+
+        if (regenerate_list_) {
+            row_item_parent_->regenerateList();
+        }
     });
 }
 
 void
 ButtonWidget::connectGtkToggleButtonSignals()
 {
-    Gtk::ToggleButton* button_widget = static_cast<Gtk::ToggleButton*>(widget_);
-
-    get_state_dispatcher_connection_ = get_state_dispatcher_.connect([this]() {
-        std::lock_guard<std::mutex> lock(mtx_get_state_);
-        Gtk::ToggleButton* button_widget =
-          static_cast<Gtk::ToggleButton*>(widget_->get_first_child());
-        button_widget->set_active(state_result_ == "1");
-        get_state_dispatcher_connection_.disconnect();
-    });
-
-    std::thread([this]() {
-        std::lock_guard<std::mutex> lock(mtx_get_state_);
-        state_result_ = helper::executeCommand(get_state_);
-        get_state_dispatcher_.emit();
-    }).detach();
-
+    Gtk::ToggleButton* button_widget = static_cast<Gtk::ToggleButton*>(but_widget_);
     button_widget->signal_toggled().connect([this, button_widget]() {
         if (button_widget->get_active()) {
             helper::executeCommand(this->onClickOn());
         } else {
             helper::executeCommand(this->onClickOff());
         }
+
+        regenerateState();
+
         if (regenerate_list_) {
             row_item_parent_->regenerateList();
         }
     });
+}
+
+void
+ButtonWidget::regenerateState()
+{
+    if (get_state_.length() > 0) {
+        get_state_dispatcher_connection_ =
+          get_state_dispatcher_.connect([this]() {
+              std::lock_guard<std::mutex> lock(mtx_get_state_);
+
+              int state_number = std::stoi(state_result_);
+              bool but_active = state_number > 0;
+
+              if (typeid(*but_widget_) == typeid(Gtk::ToggleButton)) {
+                  static_cast<Gtk::ToggleButton*>(but_widget_)
+                    ->set_active(but_active);
+              }
+
+              if (but_active) {
+                  but_img_->set_from_icon_name(icon_on_);
+              } else {
+                  but_img_->set_from_icon_name(icon_off_);
+              }
+
+              if (but_img_->get_icon_name() == "none") {
+                  but_img_->hide();
+              } else {
+                  but_img_->show();
+              }
+
+              get_state_dispatcher_connection_.disconnect();
+          });
+
+        std::thread([this]() {
+            std::lock_guard<std::mutex> lock(mtx_get_state_);
+            state_result_ = helper::executeCommand(get_state_);
+            get_state_dispatcher_.emit();
+        }).detach();
+    }
 }
 
 const std::string

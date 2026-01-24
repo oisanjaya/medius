@@ -140,15 +140,6 @@ ImageWidget::regenerateImage()
 
     Gtk::StyleProvider::remove_provider_for_display(Gdk::Display::get_default(),
                                                     css_provider_);
-
-    spdlog::debug(
-      "interval css {}",
-      std::string("." + parent_row_class_ +
-                  " .medius-image-box { background-image: url('" +
-                  file_name +
-                  "');background-position: center; "
-                  "background-repeat:no-repeat;background-size:contain; }"));
-
     css_provider_->load_from_string(
       "." + parent_row_class_ +
       " .medius-image-box { background-image: url('" + file_name +

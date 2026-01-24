@@ -158,9 +158,9 @@ ListWidget::regenerate_done(std::string generate_result)
                   "output doesn't conform regular pattern:\n{}",
                   result_line_sv);
                 spdlog::debug("filed.size(): {}", fields.size());
-                spdlog::debug("fileds[0]: {}", fields[0]);
-                spdlog::debug("fileds[1]: {}", fields[1]);
-                spdlog::debug("fileds[2]: {}", fields[2]);
+                spdlog::debug("fileds[0]: {}", fields.size() > 0 ? fields[0] : "no field");
+                spdlog::debug("fileds[1]: {}", fields.size() > 1 ? fields[1] : "no field");
+                spdlog::debug("fileds[2]: {}", fields.size() > 2 ? fields[2] : "no field");
                 return;
             }
         }
