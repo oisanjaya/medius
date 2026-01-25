@@ -34,8 +34,8 @@ class SliderWidget : public BaseWidget
     std::string popover_menu_generate_;
     std::string popover_menu_on_click_;
     int icon_size_;
-    int range_low_;
-    int range_high_;
+    int range_low_{ 0 };
+    int range_high_{ 100 };
     kdl::Node popover_menu_node_;
 
     Gtk::Scale* scale_widget_;

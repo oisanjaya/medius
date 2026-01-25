@@ -288,10 +288,8 @@ SliderWidget::regenerateState()
             Gtk::Button* but_widget =
               static_cast<Gtk::Button*>(slider_button_->getWidget());
             if ((typeid(*but_widget) == typeid(Gtk::ToggleButton)) &&
-                ((fields.size() >= 2) &&
-                 ((fields[1] == "1") || (fields[1] == "0")))) {
-                static_cast<Gtk::ToggleButton*>(but_widget)
-                  ->set_active(fields[1] == "1");
+                ((fields.size() >= 2))) {
+                slider_button_->setActive(fields[1] != "0");
             } else {
                 spdlog::warn("Config file error: Slider {} widget get_state "
                              "output doesn't conform regular pattern:\n{}",
