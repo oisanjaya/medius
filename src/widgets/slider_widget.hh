@@ -12,6 +12,8 @@
 
 namespace widgets {
 
+using PopoverWidgetTuple = std::tuple<std::string, std::string>;
+
 class SliderWidget : public BaseWidget
 {
     std::string get_state_;

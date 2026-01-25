@@ -172,26 +172,66 @@ SliderWidget::SliderWidget(config::RowItem* row_item_parent,
                         popover_generate_result_);
 
                       if (popover_generate_result_.length() > 0) {
-                          std::istringstream stream(popover_generate_result_);
-                          std::string line;
-                          while (std::getline(stream, line)) {
+                          std::vector<PopoverWidgetTuple> list_data_;
+
+                          auto result_lines =
+                            popover_generate_result_ | std::views::split('\n');
+                          for (auto&& line : result_lines) {
+                              std::string_view result_line_sv{ line.begin(),
+                                                               line.end() };
+
+                              if (!std::ranges::all_of(
+                                    result_line_sv, [](unsigned char ch) {
+                                        return std::isspace(ch);
+                                    })) {
+                                  auto fields_view =
+                                    result_line_sv | std::views::split('\t');
+                                  std::vector<std::string> fields;
+                                  for (auto&& field : fields_view) {
+                                      fields.emplace_back(field.begin(),
+                                                          field.end());
+                                  }
+
+                                  if (fields.size() == 2) {
+                                      list_data_.emplace_back(fields[0],
+                                                              fields[1]);
+                                  } else {
+                                      spdlog::warn(
+                                        "Config file error: generate "
+                                        "command of popover widget "
+                                        "output doesn't conform regular "
+                                        "pattern:\n{}",
+                                        result_line_sv);
+                                      spdlog::debug("filed.size(): {}",
+                                                    fields.size());
+                                      spdlog::debug("fileds[0]: {}",
+                                                    fields.size() > 0
+                                                      ? fields[0]
+                                                      : "no field");
+                                      spdlog::debug("fileds[1]: {}",
+                                                    fields.size() > 1
+                                                      ? fields[1]
+                                                      : "no field");
+                                      return;
+                                  }
+                              }
+                          }
+                          
+                          for (auto list_datum : list_data_) {
                               auto popover_menu_item =
-                                Gtk::make_managed<Gtk::Button>(line);
+                                Gtk::make_managed<Gtk::Button>(
+                                  std::get<1>(list_datum));
                               popover_menu_item->set_has_frame(false);
                               popover_menu_box->append(*popover_menu_item);
 
                               auto menu_command = helper::replaceString(
                                 popover_menu_on_click_.substr(1),
                                 popover_menu_on_click_.substr(0, 1),
-                                line);
-
-                              spdlog::debug("!{}!{}",
-                                            popover_menu_on_click_,
-                                            popover_menu_on_click_.substr(1));
+                                std::get<0>(list_datum));
 
                               popover_menu_item->signal_clicked().connect(
                                 [this, menu_command]() {
-                                    helper::executeCommand(menu_command);
+                                    helper::executeCommand(menu_command, false);
                                     popover_menu_->popdown();
                                 });
                           }
