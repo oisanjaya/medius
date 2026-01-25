@@ -23,7 +23,9 @@ But developing such app is difficult. What button should included? What icon it 
 
 ## Configuration
 
-coming soon. But included in this repo inside example-config are my config files. You can try copy theese files into ~/.config/medius and see how it works
+Included in this repo inside example-config are my config files. You can try copy theese files into ~/.config/medius and see how it works.
+
+Also checkout [wiki](https://github.com/oisanjaya/medius/wiki) section.
 
 ## Building
 
