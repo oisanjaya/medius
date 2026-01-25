@@ -23,7 +23,7 @@ const std::vector<std::string> Config::CONFIG_DIRS = {
     "/etc/xdg/medius/",         "./resources/",
 };
 
-const char* Config::CONFIG_PATH_ENV = "WAYLAYERMENU_CONFIG_DIR";
+const char* Config::CONFIG_PATH_ENV = "MEDIUS_CONFIG_DIR";
 
 Config::Config() {}
 
@@ -252,11 +252,6 @@ Config::load(Gtk::Box* parent_box, const std::string& config)
 
         if (node.name() == u8"close_timeout") {
             close_timeout_ = node.args()[0].as<int>();
-        }
-
-        if (node.name() == u8"list_item_box_hover_color") {
-            list_item_box_hover_color_ = reinterpret_cast<const char*>(
-              node.args()[0].as<std::u8string>().c_str());
         }
     }
 }
