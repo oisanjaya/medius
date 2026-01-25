@@ -104,12 +104,14 @@ ListWidget::regenerate(bool first_run)
         Gtk::ScrolledWindow* scrolled_window_widget = static_cast<Gtk::ScrolledWindow*>(widget_);
         scrolled_window_widget->set_policy(Gtk::PolicyType::NEVER, Gtk::PolicyType::AUTOMATIC);
         scrolled_window_widget->property_max_content_height() = max_height_;
-        scrolled_window_widget->property_min_content_height() = 300;
+        scrolled_window_widget->property_min_content_height() = max_height_ / 2;
         widget_box_ =
           Gtk::make_managed<Gtk::Box>(Gtk::Orientation::VERTICAL, 0);
         widget_box_->add_css_class("medius-list-box");
         widget_box_->add_css_class("medius-list-box_" + label_no_space_);
         widget_box_->set_name("medius-list-box_" + label_no_space_);
+        widget_box_->set_valign(Gtk::Align::START);
+        widget_box_->set_spacing(helper::main_config.getChildSpacing());
         scrolled_window_widget->set_child(*widget_box_);
     }
 
@@ -184,7 +186,6 @@ ListWidget::regenerate_done(std::string generate_result)
 
         list_item_box.add_css_class("medius-list-item-box");
         list_item_box.set_name("medius-list-item-box");
-        list_item_box.set_margin(helper::main_config.getPanelPadding());
 
         auto list_item_label =
           Gtk::make_managed<Gtk::Label>(std::get<1>(list_datum));
