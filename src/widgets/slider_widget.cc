@@ -216,7 +216,7 @@ SliderWidget::SliderWidget(config::RowItem* row_item_parent,
                                   }
                               }
                           }
-                          
+
                           for (auto list_datum : list_data_) {
                               auto popover_menu_item =
                                 Gtk::make_managed<Gtk::Button>(
@@ -359,6 +359,11 @@ SliderWidget::regenerateState()
         if (parse_error) {
             spdlog::warn("Parse command error: set slider value; defaulting to "
                          "minimal value");
+            spdlog::debug("filed.size(): {}", fields.size());
+            spdlog::debug("fileds[0]: '{}'",
+                          fields.size() > 0 ? fields[0] : "no field");
+            spdlog::debug("fileds[1]: '{}'",
+                          fields.size() > 1 ? fields[1] : "no field");
         }
 
         get_state_dispatcher_connection_.disconnect();

@@ -12,7 +12,7 @@ rows {
         height 150
         enabled {
             interval 2
-            command "/home/oisanjaya/.config/wlayerpanel/playerctlenabled.sh"
+            command "/home/oisanjaya/.config/medius/playerctlenabled.sh"
         }
         image {
             label {
@@ -48,7 +48,7 @@ rows {
             range_low 0
             range_high 100
             popover_menu {
-                generate "pactl list short sinks | tail -n +2 | awk '{print $2}'"
+                generate "pactl list short sinks | tail -n +2 | awk '{print $2\"\\t\"$2}'"
                 on_click "%pactl set-default-sink \"%\""
             }
             icon_on "audio-volume-high"
@@ -61,7 +61,7 @@ rows {
                 command """
                     echo \
                         $( \
-                            pactl get-sink-volume @DEFAULT_SINK@  | grep -m 1 -oP '\\d\\d(?=%)' | head -n 1 \
+                            pactl get-sink-volume @DEFAULT_SINK@  | grep -m 1 -oP '\\d+?(?=%)' | head -n 1 \
                         ) "\t" \
                         $( \
                             if [ "$(pactl get-sink-mute @DEFAULT_SINK@ | head -n 1)" = "Mute: no" ]; then echo "1"; else echo "0"; fi \
@@ -79,7 +79,7 @@ rows {
             range_low 0
             range_high 100
             popover_menu {
-                generate "pactl list short sources | tail -n +2 | awk '{print $2}'"
+                generate "pactl list short sources | tail -n +2 | awk '{print $2\"\\t\"$2}'"
                 on_click "%pactl set-default-source \"%\""
             }
             icon_on "audio-input-microphone-muted-symbolic"
@@ -90,7 +90,7 @@ rows {
             get_state """
                 echo \
                     $( \
-                        pactl get-source-volume @DEFAULSOURCE@  | grep -m 1 -oP '\\d\\d(?=%)' | head -n 1 \
+                        pactl get-source-volume @DEFAULSOURCE@  | grep -m 1 -oP '\\d+?(?=%)' | head -n 1 \
                     ) "\t" \
                     $( \
                         if [ "$(pactl get-source-mute @DEFAULT_SOURCE@ | head -n 1)" = "Mute: no" ]; then echo "1"; else echo "0"; fi \
@@ -136,7 +136,7 @@ rows {
                     list {
                         label hidden "Select Wifi 3"
                         hover_color "#aaaaaa7f";
-                        generate "/home/oisanjaya/.config/wlayerpanel/wifilist.sh"
+                        generate "/home/oisanjaya/.config/medius/wifilist.sh"
                         on_click_on regenerate_list "%alacritty -e nmcli --ask dev wifi connect \"%\""
                         on_click_off regenerate_list "%alacritty -e nmcli --ask dev wifi connect \"%\""
                     }
@@ -162,7 +162,7 @@ rows {
                     list {
                         label hidden "Bluetooth Devices"
                         hover_color "#aaaaaa7f";
-                        generate "/home/oisanjaya/.config/wlayerpanel/bluetoothlist.sh"
+                        generate "/home/oisanjaya/.config/medius/bluetoothlist.sh"
                         on_click_on "%bluetoothctl disconnect \"%\""
                         on_click_off "%bluetoothctl connect \"%\""
                     }
