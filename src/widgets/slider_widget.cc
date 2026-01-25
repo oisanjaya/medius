@@ -222,6 +222,9 @@ SliderWidget::SliderWidget(config::RowItem* row_item_parent,
     if (get_state_interval_ > 0) {
         Glib::signal_timeout().connect_seconds(
           [this]() -> bool {
+              if (change_timeout_ && change_timeout_.connected()) {
+                  return true;
+              }
               regenerateState();
               return true;
           },

@@ -70,10 +70,12 @@ MainWindow::MainWindow()
     gtk_layer_set_layer(main_window, GTK_LAYER_SHELL_LAYER_TOP);
     gtk_layer_set_keyboard_mode(main_window,
                                 GTK_LAYER_SHELL_KEYBOARD_MODE_ON_DEMAND);
+    Gtk::Box* main_box = builder->get_widget<Gtk::Box>("main_box");
+    helper::main_config.load(main_box, helper::cli_config.config_opt);
 
     set_default_size(helper::main_config.getPanelWidth(), -1);
+    set_size_request(helper::main_config.getPanelWidth(), -1);
 
-    Gtk::Box* main_box = builder->get_widget<Gtk::Box>("main_box");
     main_box->add_css_class("medius-main-box");
     main_box->set_name("medius-main-box");
     main_box->set_margin_top(helper::main_config.getPanelPadding());
@@ -81,8 +83,6 @@ MainWindow::MainWindow()
     main_box->set_margin_end(helper::main_config.getPanelPadding());
     main_box->set_halign(Gtk::Align::FILL);
     main_box->set_valign(Gtk::Align::START);
-
-    helper::main_config.load(main_box, helper::cli_config.config_opt);
 
     if (helper::main_config.getAnchorLeft()) {
         gtk_layer_set_anchor(main_window, GTK_LAYER_SHELL_EDGE_LEFT, TRUE);
