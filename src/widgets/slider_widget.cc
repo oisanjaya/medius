@@ -219,6 +219,7 @@ SliderWidget::SliderWidget(config::RowItem* row_item_parent,
         slider_box->append(*popover_button_);
     }
 
+    regenerateState();
     if (get_state_interval_ > 0) {
         Glib::signal_timeout().connect_seconds(
           [this]() -> bool {
@@ -229,8 +230,6 @@ SliderWidget::SliderWidget(config::RowItem* row_item_parent,
               return true;
           },
           get_state_interval_);
-    } else {
-        regenerateState();
     }
 }
 

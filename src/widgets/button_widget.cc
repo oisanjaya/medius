@@ -152,6 +152,7 @@ ButtonWidget::ButtonWidget(config::RowItem* row_item_parent,
         widget_ = but_widget_;
     }
 
+    regenerateState();
     if (get_state_interval_ > 0) {
         Glib::signal_timeout().connect_seconds(
           [this]() -> bool {

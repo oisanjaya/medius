@@ -183,8 +183,7 @@ RowItem::toggleExpander(widgets::ExpanderItem* expander_item)
     } else {
         revealer_->unset_child();
         Gtk::Box* revealer_box = expander_item->getExpanderBox();
-        if (!revealer_box->has_css_class(
-              "medius-row-expander-widget-box")) {
+        if (!revealer_box->has_css_class("medius-row-expander-widget-box")) {
             revealer_box->add_css_class("medius-row-expander-widget-box");
             revealer_box->set_name("medius-row-expander-widget-box");
         }

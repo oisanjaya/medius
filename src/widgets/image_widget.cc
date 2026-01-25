@@ -79,8 +79,8 @@ ImageWidget::ImageWidget(config::RowItem* row_item_parent,
 
     css_provider_ = Gtk::CssProvider::create();
     css_provider_->load_from_string(
-      "." + parent_row_class_ +
-      " .medius-image-box { background-image: url('" + file_name +
+      "." + parent_row_class_ + " .medius-image-box { background-image: url('" +
+      file_name +
       "');background-position: center; "
       "background-repeat:no-repeat;background-size:contain; }");
 
@@ -89,6 +89,7 @@ ImageWidget::ImageWidget(config::RowItem* row_item_parent,
       css_provider_,
       GTK_STYLE_PROVIDER_PRIORITY_USER);
 
+    regenerateImage();
     if (get_state_interval_ > 0) {
         Glib::signal_timeout().connect_seconds(
           [this]() -> bool {
@@ -98,6 +99,7 @@ ImageWidget::ImageWidget(config::RowItem* row_item_parent,
           get_state_interval_);
     }
 
+    regenerateLabel();
     if (title_interval_ > 0) {
         Glib::signal_timeout().connect_seconds(
           [this]() -> bool {
@@ -141,8 +143,8 @@ ImageWidget::regenerateImage()
     Gtk::StyleProvider::remove_provider_for_display(Gdk::Display::get_default(),
                                                     css_provider_);
     css_provider_->load_from_string(
-      "." + parent_row_class_ +
-      " .medius-image-box { background-image: url('" + file_name +
+      "." + parent_row_class_ + " .medius-image-box { background-image: url('" +
+      file_name +
       "');background-position: center; "
       "background-repeat:no-repeat;background-size:contain; }");
 
