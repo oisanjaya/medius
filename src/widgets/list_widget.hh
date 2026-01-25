@@ -1,6 +1,7 @@
 #pragma once
 
 #include "glibmm/dispatcher.h"
+#include "gtkmm/box.h"
 #include "gtkmm/cssprovider.h"
 #include "kdlpp.h"
 #include "widgets/base_widget.hh"
@@ -20,6 +21,7 @@ class ListWidget : public BaseWidget
     std::string on_click_on_;
     std::string on_click_off_;
     std::string hover_color_{ "" };
+    int max_height_{ 300 };
     Glib::RefPtr<Gtk::CssProvider> css_provider_;
     std::vector<ListWidgetTuple> list_data_;
     Glib::Dispatcher regenerate_dispatcher_;
@@ -27,6 +29,8 @@ class ListWidget : public BaseWidget
     Glib::Dispatcher list_click_dispatcher_;
     sigc::connection list_click_dispatcher_connection_;
     bool regenerate_list_{ false };
+
+    Gtk::Box* widget_box_;
 
     void connectGtkButtonSignals();
     void connectGtkToggleButtonSignals();

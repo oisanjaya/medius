@@ -4,6 +4,7 @@
 #include "gtkmm/enums.h"
 #include "gtkmm/label.h"
 #include "gtkmm/object.h"
+#include "gtkmm/scrolledwindow.h"
 #include "helper/globals.hh"
 #include <ranges>
 #include <spdlog/spdlog.h>
@@ -62,13 +63,14 @@ ListWidget::ListWidget(config::RowItem* row_item_parent,
         } else if (child.name() == u8"hover_color") {
             hover_color_ = reinterpret_cast<const char*>(
               child.args()[0].as<std::u8string>().c_str());
+        } else if (child.name() == u8"max_height") {
+            max_height_ = child.args()[0].as<int>();
         }
     }
 
     if (hover_color_.length() > 0) {
         css_provider_ = Gtk::CssProvider::create();
-        css_provider_->load_from_string(".medius-list-box_" +
-                                        label_no_space_ +
+        css_provider_->load_from_string(".medius-list-box_" + label_no_space_ +
                                         " .medius-list-item-box:hover {"
                                         "background-color: " +
                                         hover_color_ + ";}");
@@ -93,17 +95,25 @@ void
 ListWidget::regenerate(bool first_run)
 {
     if (widget_) {
-        for (auto box_child : static_cast<Gtk::Box*>(widget_)->get_children()) {
+        for (auto box_child :
+             static_cast<Gtk::Box*>(widget_box_->get_first_child())->get_children()) {
             box_child->unparent();
         }
     } else {
-        widget_ = new Gtk::Box(Gtk::Orientation::VERTICAL, 0);
-        widget_->add_css_class("medius-list-box");
-        widget_->add_css_class("medius-list-box_" + label_no_space_);
-        widget_->set_name("medius-list-box_" + label_no_space_);
+        widget_ = Gtk::make_managed<Gtk::ScrolledWindow>();
+        Gtk::ScrolledWindow* scrolled_window_widget = static_cast<Gtk::ScrolledWindow*>(widget_);
+        scrolled_window_widget->set_policy(Gtk::PolicyType::NEVER, Gtk::PolicyType::AUTOMATIC);
+        scrolled_window_widget->property_max_content_height() = max_height_;
+        scrolled_window_widget->property_min_content_height() = 300;
+        widget_box_ =
+          Gtk::make_managed<Gtk::Box>(Gtk::Orientation::VERTICAL, 0);
+        widget_box_->add_css_class("medius-list-box");
+        widget_box_->add_css_class("medius-list-box_" + label_no_space_);
+        widget_box_->set_name("medius-list-box_" + label_no_space_);
+        scrolled_window_widget->set_child(*widget_box_);
     }
 
-    static_cast<Gtk::Box*>(widget_)->set_homogeneous();
+    static_cast<Gtk::Box*>(widget_box_)->set_homogeneous();
     widget_type_ = "List";
 
     // on regenerate_dispatcher_ emision, which means command has been
@@ -158,9 +168,12 @@ ListWidget::regenerate_done(std::string generate_result)
                   "output doesn't conform regular pattern:\n{}",
                   result_line_sv);
                 spdlog::debug("filed.size(): {}", fields.size());
-                spdlog::debug("fileds[0]: {}", fields.size() > 0 ? fields[0] : "no field");
-                spdlog::debug("fileds[1]: {}", fields.size() > 1 ? fields[1] : "no field");
-                spdlog::debug("fileds[2]: {}", fields.size() > 2 ? fields[2] : "no field");
+                spdlog::debug("fileds[0]: {}",
+                              fields.size() > 0 ? fields[0] : "no field");
+                spdlog::debug("fileds[1]: {}",
+                              fields.size() > 1 ? fields[1] : "no field");
+                spdlog::debug("fileds[2]: {}",
+                              fields.size() > 2 ? fields[2] : "no field");
                 return;
             }
         }
@@ -233,7 +246,7 @@ ListWidget::regenerate_done(std::string generate_result)
         list_item_button->set_size_request(32, -1);
         list_item_box.append(*list_item_button);
 
-        static_cast<Gtk::Box*>(widget_)->append(list_item_box);
+        static_cast<Gtk::Box*>(widget_box_)->append(list_item_box);
     }
 }
 
