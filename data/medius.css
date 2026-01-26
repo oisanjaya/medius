@@ -34,6 +34,9 @@ medius-slider-box-with-label
 medius-slider_label
 */
 
+/* window {
+    background-color: rgba(0, 0, 0, 0);
+} */
 
 .medius-button {
     /* min-height:var(--rounded-corner); */

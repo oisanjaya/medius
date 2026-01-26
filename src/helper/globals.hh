@@ -11,6 +11,7 @@ struct CliConfig
 {
     std::string log_level;
     std::string config_opt;
+    std::string css_opt;
 };
 
 extern std::string latter_css_data;

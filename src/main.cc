@@ -1,18 +1,13 @@
 #include "helper/globals.hh"
 
-#include <csignal>
 #include <gtkmm.h>
 #include <string>
 
-#include "config/config.hh"
 #include "lyra/lyra.hpp"
 #include "spdlog/spdlog.h"
 #include "window.hh"
 
 using namespace medius;
-
-helper::CliConfig cli_config;
-config::Config main_config;
 
 int
 main(int argc, char* argv[])
@@ -26,11 +21,14 @@ main(int argc, char* argv[])
 
       lyra::cli() |
 
-      lyra::opt(cli_config.config_opt,
+      lyra::opt(helper::cli_config.config_opt,
                 "config")["-c"]["--config"]("Config file path.") |
 
+      lyra::opt(helper::cli_config.css_opt,
+                "style")["-s"]["--style"]("CSS file path.") |
+
       lyra::opt(
-        cli_config.log_level,
+        helper::cli_config.log_level,
         "trace|debug|info|warning|error|critical|off")["-l"]["--log-level"](
         "The Log level.");
 
@@ -50,8 +48,8 @@ main(int argc, char* argv[])
         exit(1);
     }
 
-    if (!cli_config.log_level.empty()) {
-        spdlog::set_level(spdlog::level::from_str(cli_config.log_level));
+    if (!helper::cli_config.log_level.empty()) {
+        spdlog::set_level(spdlog::level::from_str(helper::cli_config.log_level));
     }
 
     auto app = Gtk::Application::create("id.my.oisanjaya.medius");

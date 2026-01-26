@@ -124,17 +124,22 @@ MainWindow::MainWindow()
       fmt::runtime(helper::latter_css_data),
       fmt::arg("rounded_corner", helper::main_config.getRoundedCorner()));
 
-    auto filename = config::Config::findConfigPath({ "style.css" });
+    spdlog::debug("passed css file {}", helper::cli_config.config_opt);
+
+    auto filename = helper::cli_config.css_opt.empty()
+                      ? helper::main_config.findConfigPath({ "style.css" })
+                      : helper::cli_config.css_opt;
+
     if (filename.has_value()) {
         spdlog::debug("Using additional CSS file: {}", filename.value());
         std::ifstream file(filename.value(), std::ios::in);
         if (!file) {
             spdlog::warn("Loading CSS file failed!");
+        } else {
+            std::ostringstream buffer;
+            buffer << file.rdbuf();
+            helper::latter_css_data += buffer.str();
         }
-
-        std::ostringstream buffer;
-        buffer << file.rdbuf();
-        helper::latter_css_data += buffer.str();
     }
 
     spdlog::debug("latter_css_data: {}", helper::latter_css_data);
