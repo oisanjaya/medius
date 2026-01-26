@@ -16,7 +16,7 @@ executable('medius',
     'helper/widget_css_provider.cc',
     'widgets/expander_item.cc', 'widgets/base_widget.cc', 'widgets/button_widget.cc', 
     'widgets/list_widget.cc', 'widgets/slider_widget.cc', 'widgets/image_widget.cc',
-    'window.cc', gresource
+     'widgets/popover_widget.cc', 'window.cc', gresource
   ],
   dependencies: [
     ckdl_dep,

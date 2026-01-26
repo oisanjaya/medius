@@ -1,18 +1,15 @@
 #pragma once
 
 #include "glibmm/dispatcher.h"
-#include "gtkmm/button.h"
-#include "gtkmm/popovermenu.h"
 #include "gtkmm/scale.h"
 #include "kdlpp.h"
 #include "sigc++/connection.h"
 #include "widgets/base_widget.hh"
 #include "widgets/button_widget.hh"
+#include "widgets/popover_widget.hh"
 #include <string>
 
 namespace widgets {
-
-using PopoverWidgetTuple = std::tuple<std::string, std::string>;
 
 class SliderWidget : public BaseWidget
 {
@@ -26,25 +23,18 @@ class SliderWidget : public BaseWidget
     std::string on_click_on_;
     std::string on_click_off_;
     std::string state_result_;
-    std::string popover_generate_result_;
     mutable std::mutex mtx_get_state_;
     Glib::Dispatcher get_state_dispatcher_;
     sigc::connection get_state_dispatcher_connection_;
-    mutable std::mutex mtx_get_popover_;
-    Glib::Dispatcher get_popover_dispatcher_;
-    sigc::connection get_popover_dispatcher_connection_;
-    std::string popover_menu_generate_;
-    std::string popover_menu_on_click_;
     int icon_size_;
     int range_low_{ 0 };
     int range_high_{ 100 };
     kdl::Node popover_menu_node_;
 
     Gtk::Scale* scale_widget_;
-    Gtk::PopoverMenu* popover_menu_;
 
     ButtonWidget* slider_button_ = nullptr;
-    Gtk::Button* popover_button_ = nullptr;
+    PopoverWidget* slider_popover_ = nullptr;
     sigc::connection change_timeout_;
 
     void regenerateState();
