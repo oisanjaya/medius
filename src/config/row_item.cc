@@ -22,8 +22,10 @@ namespace config {
 
 RowItem::RowItem(Gtk::Box* parent_box,
                  const kdl::Node& node_data,
-                 std::vector<config::RowItem*>* row_item_storage)
-  : row_item_storage_(row_item_storage)
+                 std::vector<config::RowItem*>* row_item_storage,
+                 RowItem* parent_row_item)
+  : parent_row_item_(parent_row_item)
+  , row_item_storage_(row_item_storage)
 {
     name_ = node_data.name();
     expander_busy_ = false;
@@ -34,31 +36,68 @@ RowItem::RowItem(Gtk::Box* parent_box,
     row_box_->set_halign(Gtk::Align::FILL);
     row_box_->set_valign(Gtk::Align::FILL);
 
-    auto overlay_box = Gtk::make_managed<Gtk::Box>(
-      Gtk::Orientation::VERTICAL, helper::main_config.getChildSpacing());
-    expander_box_ = Gtk::make_managed<Gtk::Box>();
-    expander_box_->add_css_class("medius-row-box");
-    expander_box_->add_css_class(std::string("medius-row-box_") +
-                                 reinterpret_cast<const char*>(name_.c_str()));
-    expander_box_->set_name(std::string("medius-row-box_") +
-                            reinterpret_cast<const char*>(name_.c_str()));
+    if (!parent_row_item_) {
+        auto overlay_box = Gtk::make_managed<Gtk::Box>(
+          Gtk::Orientation::VERTICAL, helper::main_config.getChildSpacing());
+        expander_box_ = Gtk::make_managed<Gtk::Box>();
+        expander_box_->add_css_class("medius-row-box");
+        expander_box_->add_css_class(
+          std::string("medius-row-box_") +
+          reinterpret_cast<const char*>(name_.c_str()));
+        expander_box_->set_name(std::string("medius-row-box_") +
+                                reinterpret_cast<const char*>(name_.c_str()));
 
-    overlay_box->add_css_class("medius-row-expander-box");
-    overlay_box->set_name("medius-row-expander-box");
+        overlay_box->add_css_class("medius-row-expander-box");
+        overlay_box->set_name("medius-row-expander-box");
 
-    revealer_ = new Gtk::Revealer();
-    overlay_box->add_css_class("medius-row-expander");
-    overlay_box->set_name("medius-row-expander");
-    revealer_->set_transition_type(Gtk::RevealerTransitionType::SLIDE_DOWN);
-    revealer_->set_transition_duration(
-      helper::main_config.getAnimationDuration());
-    revealer_->set_valign(Gtk::Align::START);
+        revealer_ = new Gtk::Revealer();
+        overlay_box->add_css_class("medius-row-expander");
+        overlay_box->set_name("medius-row-expander");
+        revealer_->set_transition_type(Gtk::RevealerTransitionType::SLIDE_DOWN);
+        revealer_->set_transition_duration(
+          helper::main_config.getAnimationDuration());
+        revealer_->set_valign(Gtk::Align::START);
 
-    overlay_box->append(*row_box_);
-    overlay_box->append(*revealer_);
+        overlay_box->append(*row_box_);
+        overlay_box->append(*revealer_);
+
+        spinner_ = Gtk::make_managed<Gtk::Spinner>();
+        spinner_->set_halign(Gtk::Align::CENTER);
+        spinner_->set_valign(Gtk::Align::CENTER);
+
+        overlay_ = new Gtk::Overlay();
+        overlay_->set_halign(Gtk::Align::FILL);
+        overlay_->set_valign(Gtk::Align::FILL);
+        overlay_->set_hexpand();
+        overlay_->set_vexpand();
+        overlay_->set_child(*overlay_box);
+        overlay_->add_overlay(*spinner_);
+        expander_box_->append(*overlay_);
+    }
 
     for (kdl::Node child : node_data.children()) {
-        if (child.name() == u8"button") {
+        if (child.name() == u8"rows") {
+            auto nested_row = Gtk::make_managed<Gtk::Box>();
+            nested_row->set_orientation(row_box_->get_orientation() ==
+                                            Gtk::Orientation::HORIZONTAL
+                                          ? Gtk::Orientation::VERTICAL
+                                          : Gtk::Orientation::HORIZONTAL);
+            nested_row->set_spacing(helper::main_config.getChildSpacing());
+            nested_row->set_homogeneous();
+            nested_row->set_halign(Gtk::Align::FILL);
+            nested_row->set_valign(Gtk::Align::FILL);
+            row_box_->append(*nested_row);
+
+            for (kdl::Node row_node : child.children()) {
+                spdlog::debug(
+                  "nested row create {}",
+                  reinterpret_cast<const char*>(row_node.name().c_str()));
+                auto nested_row_item =
+                  new RowItem(nested_row, row_node, &nested_rows_, this);
+
+                nested_rows_.push_back(nested_row_item);
+            }
+        } else if (child.name() == u8"button") {
             auto widget = new widgets::ButtonWidget(this, child);
 
             widgets_.push_back(widget);
@@ -90,20 +129,11 @@ RowItem::RowItem(Gtk::Box* parent_box,
         row_box_->set_size_request(-1, height_);
     }
 
-    spinner_ = Gtk::make_managed<Gtk::Spinner>();
-    spinner_->set_halign(Gtk::Align::CENTER);
-    spinner_->set_valign(Gtk::Align::CENTER);
-
-    overlay_ = new Gtk::Overlay();
-    overlay_->set_halign(Gtk::Align::FILL);
-    overlay_->set_valign(Gtk::Align::FILL);
-    overlay_->set_hexpand();
-    overlay_->set_vexpand();
-    overlay_->set_child(*overlay_box);
-    overlay_->add_overlay(*spinner_);
-    expander_box_->append(*overlay_);
-
-    parent_box->append(*expander_box_);
+    if (!parent_row_item_) {
+        parent_box->append(*expander_box_);
+    } else {
+        parent_box->append(*row_box_);
+    }
 
     if (enabled_.length() > 0) {
         bool is_enabled{ true };
@@ -127,6 +157,10 @@ RowItem::RowItem(Gtk::Box* parent_box,
 
 RowItem::~RowItem()
 {
+    for (auto ptr : nested_rows_) {
+        delete ptr;
+    }
+
     for (auto ptr : widgets_) {
         delete ptr;
     }
@@ -167,6 +201,11 @@ RowItem::getRowHeight()
 void
 RowItem::toggleExpander(widgets::ExpanderItem* expander_item)
 {
+    if (parent_row_item_){
+        parent_row_item_->toggleExpander(expander_item);
+        return;
+    }
+
     if (expander_busy_) {
         return;
     }

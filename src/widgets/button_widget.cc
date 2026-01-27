@@ -117,8 +117,9 @@ ButtonWidget::ButtonWidget(config::RowItem* row_item_parent,
 
     but_widget_->set_child(but_box);
     but_widget_->set_hexpand();
-    but_widget_->set_hexpand(true);
+    but_widget_->set_vexpand();
     but_widget_->set_halign(Gtk::Align::FILL);
+    but_widget_->set_valign(Gtk::Align::FILL);
 
     regenerateState();
 

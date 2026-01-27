@@ -17,12 +17,14 @@ class RowItem
 {
     Gtk::Box* row_box_;
     Gtk::Box* expander_box_;
+    RowItem* parent_row_item_;
 
     int height_{ -1 };
     std::u8string name_;
     std::string enabled_;
     int enabled_interval_{ -1 };
     bool dynamic_enabled_{ false };
+    std::vector<RowItem*> nested_rows_;
     std::vector<widgets::BaseWidget*> widgets_;
     std::vector<config::RowItem*>* row_item_storage_;
     Gtk::Revealer* revealer_;
@@ -35,7 +37,8 @@ class RowItem
   public:
     RowItem(Gtk::Box* parent_box,
             const kdl::Node& node_data,
-            std::vector<config::RowItem*>* row_item_storage = nullptr);
+            std::vector<config::RowItem*>* row_item_storage = nullptr,
+            RowItem* parent_row_item = nullptr);
     ~RowItem();
 
     std::string getName();
