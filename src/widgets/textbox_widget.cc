@@ -1,7 +1,9 @@
 #include "textbox_widget.hh"
 #include "gtkmm/box.h"
+#include "gtkmm/button.h"
 #include "gtkmm/label.h"
 #include "gtkmm/object.h"
+#include "helper/globals.hh"
 #include "widgets/base_widget.hh"
 
 namespace widgets {
@@ -17,8 +19,7 @@ TextBox::TextBox(config::RowItem* row_item_parent, const kdl::Node& node_data)
     }
 
     widget_type_ = "TextBox";
-    widget_ = Gtk::make_managed<Gtk::Box>();
-    auto textbox_box = static_cast<Gtk::Box*>(widget_);
+    auto textbox_box = Gtk::make_managed<Gtk::Box>();
 
     textbox_box->add_css_class("medius-textbox-box");
     textbox_box->add_css_class("medius-textbox-box_" + label_no_space_);
@@ -30,6 +31,18 @@ TextBox::TextBox(config::RowItem* row_item_parent, const kdl::Node& node_data)
     auto textbox_label = Gtk::make_managed<Gtk::Label>();
     textbox_label->set_markup(label_);
     textbox_box->append(*textbox_label);
+
+    if (command_.empty()) {
+        widget_ = textbox_box;
+    } else {
+        widget_ = Gtk::make_managed<Gtk::Button>();
+        auto button_widget = reinterpret_cast<Gtk::Button*>(widget_);
+        button_widget->set_has_frame(false);
+        button_widget->set_child(*textbox_box);
+        button_widget->signal_clicked().connect([this](){
+            helper::executeCommand(command_);
+        });
+    }
 }
 
 TextBox::~TextBox() {}
