@@ -13,6 +13,7 @@
 #include "widgets/image_widget.hh"
 #include "widgets/list_widget.hh"
 #include "widgets/slider_widget.hh"
+#include "widgets/textbox_widget.hh"
 #include <cstddef>
 #include <spdlog/spdlog.h>
 #include <string>
@@ -114,6 +115,11 @@ RowItem::RowItem(Gtk::Box* parent_box,
             row_box_->append(*widget->getWidget());
         } else if (child.name() == u8"image") {
             auto widget = new widgets::ImageWidget(this, child);
+
+            widgets_.push_back(widget);
+            row_box_->append(*widget->getWidget());
+        } else if (child.name() == u8"textbox") {
+            auto widget = new widgets::TextBox(this, child);
 
             widgets_.push_back(widget);
             row_box_->append(*widget->getWidget());
