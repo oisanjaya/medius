@@ -26,50 +26,6 @@
 #include <librsvg/rsvg.h>
 namespace medius {
 
-
-class SvgDrawingArea : public Gtk::DrawingArea {
-public:
-    SvgDrawingArea(const std::string& svg_data) {
-        GError* error = nullptr;
-        // Load SVG handle from string data
-        handle = rsvg_handle_new_from_data(
-            reinterpret_cast<const guint8*>(svg_data.c_str()),
-            svg_data.size(),
-            &error
-        );
-
-        if (error) {
-            g_printerr("Error loading SVG: %s\n", error->message);
-            g_error_free(error);
-        }
-
-        // Set the draw function (GTK4 style)
-        set_draw_func(sigc::mem_fun(*this, &SvgDrawingArea::on_draw));
-    }
-
-    ~SvgDrawingArea() {
-        if (handle) g_object_unref(handle);
-    }
-
-protected:
-    void on_draw(const Cairo::RefPtr<Cairo::Context>& cr, int width, int height) {
-        if (!handle) return;
-
-        RsvgRectangle viewport = {0, 0, (double)width, (double)height};
-        GError* error = nullptr;
-
-        // Render the SVG to the Cairo context, scaling it to fill the widget
-        rsvg_handle_render_document(handle, cr->cobj(), &viewport, &error);
-
-        if (error) {
-            g_error_free(error);
-        }
-    }
-
-private:
-    RsvgHandle* handle = nullptr;
-};
-
 Gtk::Scale*
 find_slider_widget(Gtk::Box* scale_box_widget)
 {
