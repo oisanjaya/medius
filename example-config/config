@@ -48,27 +48,35 @@ rows {
             range_low 0
             range_high 100
             popover_menu {
-                generate "pactl list short sinks | tail -n +2 | awk '{print $2\"\\t\"$2}'"
-                on_click "%pactl set-default-sink \"%\""
+                generate """pactl list short sinks | tail -n +2 | awk '{print $2"\t"$2}'"""
+                on_click """%pactl set-default-sink "%" """
             }
             icon_on "audio-volume-high"
             icon_off "audio-volume-muted"
+            button_get_state {
+                interval 2
+                command #"""
+                    if [ "$(pactl get-sink-mute @DEFAULT_SINK@ | head -n 1)" = "Mute: no" ]; then \
+                        pactl get-sink-volume @DEFAULT_SINK@  | grep -m 1 -oP '\d+?(?=%)' | head -n 1; else\
+                        echo "0"; fi
+                    """#
+            }
             icon_size 15
             on_click_on "pactl set-sink-mute @DEFAULT_SINK@ 0"
             on_click_off "pactl set-sink-mute @DEFAULT_SINK@ 1"
             get_state {
                 interval 2
-                command """
+                command #"""
                     echo \
                         $( \
-                            pactl get-sink-volume @DEFAULT_SINK@  | grep -m 1 -oP '\\d+?(?=%)' | head -n 1 \
+                            pactl get-sink-volume @DEFAULT_SINK@  | grep -m 1 -oP '\d+?(?=%)' | head -n 1 \
                         ) "\t" \
                         $( \
                             if [ "$(pactl get-sink-mute @DEFAULT_SINK@ | head -n 1)" = "Mute: no" ]; then echo "1"; else echo "0"; fi \
                         )
-"""
+                    """#
             }
-            on_change "#pactl set-sink-volume @DEFAULT_SINK@ #%"
+            on_change "#pactl set-sink-mute @DEFAULT_SINK@ 0 ; pactl set-sink-volume @DEFAULT_SINK@ #%"
         }
     }
 
@@ -79,24 +87,32 @@ rows {
             range_low 0
             range_high 100
             popover_menu {
-                generate "pactl list short sources | tail -n +2 | awk '{print $2\"\\t\"$2}'"
-                on_click "%pactl set-default-source \"%\""
+                generate """pactl list short sources | awk '{print $2"\t"$2}'"""
+                on_click """%pactl set-default-source "%"" """
             }
             icon_on "audio-input-microphone-muted-symbolic"
             icon_off "audio-input-microphone-symbolic"
+            button_get_state {
+                interval 2
+                command #"""
+                    if [ "$(pactl get-source-mute @DEFAULT_SOURCE@ | head -n 1)" = "Mute: no" ]; then \
+                        pactl get-source-volume @DEFAULT_SOURCE@  | grep -m 1 -oP '\d+?(?=%)' | head -n 1; else\
+                        echo "0"; fi
+                    """#
+            }
             icon_size 15
             on_click_on "pactl set-source-mute @DEFAULT_SOURCE@ 0"
             on_click_off "pactl set-source-mute @DEFAULT_SOURCE@ 1"
-            get_state """
+            get_state #"""
                 echo \
                     $( \
-                        pactl get-source-volume @DEFAULSOURCE@  | grep -m 1 -oP '\\d+?(?=%)' | head -n 1 \
+                        pactl get-source-volume @DEFAULSOURCE@  | grep -m 1 -oP '\d+?(?=%)' | head -n 1 \
                     ) "\t" \
                     $( \
                         if [ "$(pactl get-source-mute @DEFAULT_SOURCE@ | head -n 1)" = "Mute: no" ]; then echo "1"; else echo "0"; fi \
                     )
-"""
-            on_change "#pactl set-source-volume @DEFAULT_SOURCE@ #%"
+                """#
+            on_change "#pactl set-source-mute @DEFAULT_SOURCE@ 0 ; pactl set-source-volume @DEFAULT_SOURCE@ #%"
         }
     }
 
