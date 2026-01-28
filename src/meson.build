@@ -22,6 +22,7 @@ executable('medius',
     ckdl_dep,
     gtk_dep, 
     spdlog_dep,
+    librsvg_deps,
     gtk4_layer_shell_dep
   ],
   include_directories: inc_dirs,

@@ -21,7 +21,54 @@
 #include <string>
 #include <sys/types.h>
 
+
+#include <gtkmm.h>
+#include <librsvg/rsvg.h>
 namespace medius {
+
+
+class SvgDrawingArea : public Gtk::DrawingArea {
+public:
+    SvgDrawingArea(const std::string& svg_data) {
+        GError* error = nullptr;
+        // Load SVG handle from string data
+        handle = rsvg_handle_new_from_data(
+            reinterpret_cast<const guint8*>(svg_data.c_str()),
+            svg_data.size(),
+            &error
+        );
+
+        if (error) {
+            g_printerr("Error loading SVG: %s\n", error->message);
+            g_error_free(error);
+        }
+
+        // Set the draw function (GTK4 style)
+        set_draw_func(sigc::mem_fun(*this, &SvgDrawingArea::on_draw));
+    }
+
+    ~SvgDrawingArea() {
+        if (handle) g_object_unref(handle);
+    }
+
+protected:
+    void on_draw(const Cairo::RefPtr<Cairo::Context>& cr, int width, int height) {
+        if (!handle) return;
+
+        RsvgRectangle viewport = {0, 0, (double)width, (double)height};
+        GError* error = nullptr;
+
+        // Render the SVG to the Cairo context, scaling it to fill the widget
+        rsvg_handle_render_document(handle, cr->cobj(), &viewport, &error);
+
+        if (error) {
+            g_error_free(error);
+        }
+    }
+
+private:
+    RsvgHandle* handle = nullptr;
+};
 
 Gtk::Scale*
 find_slider_widget(Gtk::Box* scale_box_widget)
@@ -71,28 +118,11 @@ MainWindow::MainWindow()
     gtk_layer_set_layer(main_window, GTK_LAYER_SHELL_LAYER_TOP);
     gtk_layer_set_keyboard_mode(main_window,
                                 GTK_LAYER_SHELL_KEYBOARD_MODE_ON_DEMAND);
-
     Gtk::Box* main_box = builder->get_widget<Gtk::Box>("main_box");
-
     helper::main_config.load(main_box, helper::cli_config.config_opt);
 
     set_default_size(helper::main_config.getPanelWidth(), -1);
     set_size_request(helper::main_config.getPanelWidth(), -1);
-
-    if (helper::main_config.getCloseOnEscape() > 0) {
-        auto keypress_controller = Gtk::EventControllerKey::create();
-        keypress_controller->signal_key_pressed().connect(
-          [this](guint keyval, guint, Gdk::ModifierType) -> bool {
-              if (keyval == GDK_KEY_Escape) {
-                  close();
-                  return true;
-              }
-              return false;
-          },
-          false);
-
-        add_controller(keypress_controller);
-    }
 
     main_box->add_css_class("medius-main-box");
     main_box->set_name("medius-main-box");
