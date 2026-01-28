@@ -24,7 +24,12 @@ SliderWidget::SliderWidget(config::RowItem* row_item_parent,
   : BaseWidget(row_item_parent, node_data)
 {
     for (kdl::Node child : node_data.children()) {
-        if (child.name() == u8"icon_on") {
+        if (child.name() == u8"button_get_state") {
+            std::tie(button_dynamic_get_state_,
+                     button_get_state_,
+                     button_get_state_interval_) =
+              helper::staticOrDynamicCommand(child);
+        } else if (child.name() == u8"icon_on") {
             icon_on_ = reinterpret_cast<const char*>(
               child.args()[0].as<std::u8string>().c_str());
         } else if (child.name() == u8"icon_off") {
@@ -71,6 +76,14 @@ SliderWidget::SliderWidget(config::RowItem* row_item_parent,
             label_no_space_ + "\"\n" +
             (icon_off_ != "none" ? ("icon_off \"" + icon_off_ + "\"\n") : "") +
             (icon_on_ != "none" ? ("icon_on \"" + icon_on_ + "\"\n") : "") +
+            (!button_get_state_.empty()
+               ? ("get_state " +
+                  (button_dynamic_get_state_
+                     ? ("{\ninterval " + std::to_string(button_get_state_interval_) +
+                        "\ncommand #\"\"\"\n" + button_get_state_ + "\n\"\"\"#\n}")
+                     : ("\"" + icon_on_ + "\"")) +
+                  "\n")
+               : "") +
             (on_click_on_ != "none" ? ("on_click_on \"" + on_click_on_ + "\"\n")
                                     : "") +
             (on_click_off_ != "none"
@@ -154,7 +167,8 @@ SliderWidget::SliderWidget(config::RowItem* row_item_parent,
     }
 }
 
-SliderWidget::~SliderWidget() {
+SliderWidget::~SliderWidget()
+{
     if (slider_popover_) {
         delete slider_popover_;
     }

@@ -90,9 +90,6 @@ RowItem::RowItem(Gtk::Box* parent_box,
             row_box_->append(*nested_row);
 
             for (kdl::Node row_node : child.children()) {
-                spdlog::debug(
-                  "nested row create {}",
-                  reinterpret_cast<const char*>(row_node.name().c_str()));
                 auto nested_row_item =
                   new RowItem(nested_row, row_node, &nested_rows_, this);
 

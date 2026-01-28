@@ -142,8 +142,6 @@ ListWidget::regenerate(bool first_run)
 void
 ListWidget::regenerate_done(std::string generate_result)
 {
-    spdlog::debug("List widget; `generate` result: \n{}", generate_result);
-
     if (generate_result.length() > 0) {
         list_data_.clear();
     }
@@ -199,7 +197,6 @@ ListWidget::regenerate_done(std::string generate_result)
           Gtk::make_managed<Gtk::Button>(reinterpret_cast<const char*>(
             std::get<2>(list_datum) == "1" ? u8"✓" : u8"-"));
         list_item_button->signal_clicked().connect([this, list_datum]() {
-            spdlog::debug("click list {}", std::get<2>(list_datum));
             std::string but_cmd = "";
             if (std::get<2>(list_datum) == "1") {
                 if (this->onClickOn().length() > 0) {
@@ -212,8 +209,6 @@ ListWidget::regenerate_done(std::string generate_result)
             }
 
             if (but_cmd.length() > 0) {
-                spdlog::debug("click list but_cmd {}", but_cmd);
-
                 std::string value = std::get<0>(list_datum);
                 value = value.substr(value.find_first_not_of(" \n\r\t\f\v"));
                 value =

@@ -19,6 +19,9 @@ class SliderWidget : public BaseWidget
 
     std::string icon_on_{ "none" };
     std::string icon_off_{ "none" };
+    int button_get_state_interval_{ -1 };
+    std::string button_get_state_;
+    bool button_dynamic_get_state_{ false };
     std::string on_change_;
     std::string on_click_on_;
     std::string on_click_off_;
