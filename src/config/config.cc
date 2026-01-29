@@ -253,6 +253,10 @@ Config::load(Gtk::Box* parent_box, const std::string& config)
         if (node.name() == u8"close_timeout") {
             close_timeout_ = node.args()[0].as<int>();
         }
+
+        if (node.name() == u8"close_on_escape") {
+            close_on_escape_ = node.args()[0].as<int>();
+        }
     }
 }
 
@@ -344,6 +348,10 @@ bool Config::getAnchorTop() {
 
 bool Config::getAnchorBottom() {
     return anchor_bottom_;
+}
+
+int Config::getCloseOnEscape() {
+    return close_on_escape_;
 }
 
 }

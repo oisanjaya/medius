@@ -5,6 +5,7 @@
 #include "gtkmm/box.h"
 #include "gtkmm/cssprovider.h"
 #include "gtkmm/enums.h"
+#include "gtkmm/object.h"
 #include "gtkmm/scale.h"
 #include "gtkmm/styleprovider.h"
 #include "helper/globals.hh"
@@ -70,11 +71,28 @@ MainWindow::MainWindow()
     gtk_layer_set_layer(main_window, GTK_LAYER_SHELL_LAYER_TOP);
     gtk_layer_set_keyboard_mode(main_window,
                                 GTK_LAYER_SHELL_KEYBOARD_MODE_ON_DEMAND);
+
     Gtk::Box* main_box = builder->get_widget<Gtk::Box>("main_box");
+
     helper::main_config.load(main_box, helper::cli_config.config_opt);
 
     set_default_size(helper::main_config.getPanelWidth(), -1);
     set_size_request(helper::main_config.getPanelWidth(), -1);
+
+    if (helper::main_config.getCloseOnEscape() > 0) {
+        auto keypress_controller = Gtk::EventControllerKey::create();
+        keypress_controller->signal_key_pressed().connect(
+          [this](guint keyval, guint, Gdk::ModifierType) -> bool {
+              if (keyval == GDK_KEY_Escape) {
+                  close();
+                  return true;
+              }
+              return false;
+          },
+          false);
+
+        add_controller(keypress_controller);
+    }
 
     main_box->add_css_class("medius-main-box");
     main_box->set_name("medius-main-box");
