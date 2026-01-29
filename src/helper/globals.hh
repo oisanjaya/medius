@@ -24,5 +24,7 @@ executeCommand(const std::string& command, bool clean_new_line = true);
 std::string
 replaceString(std::string hay, std::string needle, std::string replacement);
 StaticOrDynamicCommandTuple staticOrDynamicCommand(kdl::Node child);
+std::string trim(const std::string& s);
+bool isNumber(const std::string& str);
 
 }

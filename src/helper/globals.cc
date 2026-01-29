@@ -11,6 +11,46 @@ bool disable_lost_focus_quit = false;
 CliConfig cli_config;
 config::Config main_config;
 
+std::string
+trim(const std::string& s)
+{
+    size_t start = s.find_first_not_of(" \t\n\r");
+    size_t end = s.find_last_not_of(" \t\n\r");
+    return (start == std::string::npos) ? "" : s.substr(start, end - start + 1);
+}
+
+bool
+isNumber(const std::string& str)
+{
+    std::string s = trim(str);
+    if (s.empty())
+        return false;
+
+    bool decimalPointSeen = false;
+    bool digitSeen = false;
+    size_t start = 0;
+
+    if (s[0] == '+' || s[0] == '-') {
+        start = 1;
+        if (s.size() == 1)
+            return false; // Only sign, no digits
+    }
+
+    for (size_t i = start; i < s.size(); ++i) {
+        if (std::isdigit(s[i])) {
+            digitSeen = true;
+        } else if (s[i] == '.') {
+            if (decimalPointSeen)
+                return false; // More than one decimal point
+            decimalPointSeen = true;
+        } else {
+            return false; // Invalid character
+        }
+    }
+
+    return digitSeen; // Must have at least one digit
+}
+
 const std::string
 executeCommand(const std::string& command, bool clean_new_line)
 {
@@ -72,7 +112,7 @@ staticOrDynamicCommand(kdl::Node child)
         }
     } else {
         std::get<1>(retval) = reinterpret_cast<const char*>(
-                  child.args()[0].as<std::u8string>().c_str());
+          child.args()[0].as<std::u8string>().c_str());
     }
 
     return retval;
