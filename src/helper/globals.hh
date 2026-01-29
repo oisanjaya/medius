@@ -6,6 +6,7 @@
 namespace helper {
 
 using StaticOrDynamicCommandTuple = std::tuple<bool, std::string, int>;
+using VarTuple = std::tuple<std::string, std::string, double>;
 
 struct CliConfig
 {
