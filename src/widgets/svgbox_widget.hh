@@ -5,6 +5,7 @@
 #include "kdlpp.h"
 #include "librsvg/rsvg.h"
 #include "widgets/base_widget.hh"
+#include <string>
 namespace widgets {
 
 class SvgBox : public BaseWidget
@@ -21,6 +22,8 @@ class SvgBox : public BaseWidget
       kdl::Node cmdNode);
     std::string evalSvgAttr(std::string cmd_attr_name,
                             kdl::Value cmd_attr_value);
+    std::string evalSvgAttr(std::string cmd_attr_name,
+                            std::string cmd_attr_value);
 
   public:
     SvgBox(config::RowItem* row_item_parent, const kdl::Node& node_data);

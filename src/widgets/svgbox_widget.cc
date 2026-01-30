@@ -17,7 +17,9 @@
 namespace widgets {
 
 double
-evalExpr(std::string expr, std::vector<helper::VarTuple> vars)
+evalExpr(std::string expr,
+         std::vector<helper::VarTuple> vars,
+         bool exit_on_error = true)
 {
     double result;
     std::unique_ptr<te_variable[]> var_arr(new te_variable[vars.size()]);
@@ -44,11 +46,66 @@ evalExpr(std::string expr, std::vector<helper::VarTuple> vars)
 
         te_free(texpr);
     } else {
-        spdlog::error("Parse error at {} with expression {}", err, expr);
-        std::exit(-1);
+        if (exit_on_error) {
+            spdlog::error("Parse error at {} with expression {}", err, expr);
+            std::exit(-1);
+        } else {
+            spdlog::warn("Parse error at {} with expression {}", err, expr);
+            return NAN;
+        }
+    }
+    return result;
+}
+
+std::string
+SvgBox::evalSvgAttr(std::string cmd_attr_name, std::string cmd_attr_value)
+{
+    if (cmd_attr_name.substr(0, 1) == "@") {
+        cmd_attr_name = cmd_attr_name.substr(1);
+
+        bool is_all_vars_numbers = true;
+        bool force_replace_vars = false;
+        for (auto vars : *variables_) {
+            if ((cmd_attr_value.find(std::get<0>(vars)) != std::string::npos)) {
+                is_all_vars_numbers =
+                  is_all_vars_numbers &&
+                  (std::get<3>(vars) == helper::VarType::NUMBER);
+            }
+        }
+
+        if (is_all_vars_numbers) {
+            auto attr_val = evalExpr(cmd_attr_value, *variables_, false);
+
+            if (isnan(attr_val)) {
+                is_all_vars_numbers = false;
+                force_replace_vars = true;
+            } else {
+                return (cmd_attr_name + "=\"" +
+                        std::to_string(std::lround(attr_val)) + "\"");
+            }
+        }
+
+        if (!is_all_vars_numbers) {
+            std::string var_replace_str = cmd_attr_value;
+            for (auto vars : *variables_) {
+                if (((std::get<3>(vars) == helper::VarType::STRING ||
+                      force_replace_vars)) &&
+                    (cmd_attr_value.find(std::get<0>(vars)) !=
+                     std::string::npos)) {
+
+                    std::string replacing_str =
+                      force_replace_vars ? std::to_string((std::get<2>(vars)))
+                                         : std::get<1>(vars);
+                    var_replace_str = helper::replaceString(
+                      var_replace_str, std::get<0>(vars), replacing_str);
+                }
+            }
+
+            return (cmd_attr_name + "=\"" + var_replace_str + "\"");
+        }
     }
 
-    return result;
+    return (cmd_attr_name + "=\"" + cmd_attr_value + "\"");
 }
 
 std::string
@@ -57,34 +114,8 @@ SvgBox::evalSvgAttr(std::string cmd_attr_name, kdl::Value cmd_attr_value)
     if (cmd_attr_name.substr(0, 1) == "@") {
         std::string cmd_arg = reinterpret_cast<const char*>(
           cmd_attr_value.as<std::u8string>().c_str());
-        cmd_attr_name = cmd_attr_name.substr(1);
 
-        bool is_all_vars_numbers = true;
-        for (auto vars : *variables_) {
-            if ((cmd_arg.find(std::get<0>(vars)) != std::string::npos)) {
-                is_all_vars_numbers =
-                  is_all_vars_numbers &&
-                  (std::get<3>(vars) == helper::VarType::NUMBER);
-            }
-        }
-
-        if (is_all_vars_numbers) {
-            auto attr_val = evalExpr(cmd_arg, *variables_);
-
-            return (cmd_attr_name + "=\"" +
-                    std::to_string(std::lround(attr_val)) + "\"");
-        } else {
-            std::string var_replace_str = cmd_arg;
-            for (auto vars : *variables_) {
-                if ((std::get<3>(vars) == helper::VarType::STRING) &&
-                    (cmd_arg.find(std::get<0>(vars)) != std::string::npos)) {
-                    var_replace_str = helper::replaceString(
-                      var_replace_str, cmd_arg, std::get<1>(vars));
-                }
-            }
-
-            return (cmd_attr_name + "=\"" + var_replace_str + "\"");
-        }
+        return evalSvgAttr(cmd_attr_name, cmd_arg);
     } else {
         std::string attr_val_str;
 
