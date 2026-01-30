@@ -11,7 +11,7 @@ class SvgBox : public BaseWidget
     RsvgHandle* svg_handle_{ nullptr };
     std::string svg_string_;
 
-    std::unique_ptr<std::vector<helper::VarTuple>> var_vector_;
+    std::unique_ptr<std::vector<helper::VarTuple>> variables_;
 
     void on_drawingarea_draw(const Cairo::RefPtr<Cairo::Context>& cr,
                              int width,

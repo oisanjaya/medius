@@ -13,6 +13,7 @@
 #include <librsvg/rsvg.h>
 #include <spdlog/spdlog.h>
 #include <string>
+#include <variant>
 
 namespace widgets {
 
@@ -54,8 +55,8 @@ evalExpr(std::string expr, std::vector<helper::VarTuple> vars)
 SvgBox::SvgBox(config::RowItem* row_item_parent, const kdl::Node& node_data)
   : BaseWidget(row_item_parent, node_data)
 {
-    var_vector_ = std::make_unique<std::vector<helper::VarTuple>>();
-    auto command_vector = std::make_unique<std::vector<std::string>>();
+    variables_ = std::make_unique<std::vector<helper::VarTuple>>();
+    auto svg_cmds = std::make_unique<std::vector<std::string>>();
 
     svg_string_ = "<svg {0} {1} viewBox=\"0 0 {2} {3}\"\n"
                   "xmlns=\"http://www.w3.org/2000/svg\" version=\"1.1\">\n";
@@ -81,22 +82,49 @@ SvgBox::SvgBox(config::RowItem* row_item_parent, const kdl::Node& node_data)
                       reinterpret_cast<const char*>(cmd_attr.name().c_str());
 
                     if (cmd_attr_name.substr(0, 1) == "@") {
+                        std::string cmd_arg = reinterpret_cast<const char*>(
+                          cmd_attr.args()[0].as<std::u8string>().c_str());
                         cmd_attr_name = cmd_attr_name.substr(1);
 
-                        auto attr_val = evalExpr(
-                          reinterpret_cast<const char*>(
-                            cmd_attr.args()[0].as<std::u8string>().c_str()),
-                          *var_vector_);
+                        bool is_all_vars_numbers = true;
+                        for (auto vars : *variables_) {
+                            if ((cmd_arg.find(std::get<0>(vars)) !=
+                                 std::string::npos)) {
+                                is_all_vars_numbers = is_all_vars_numbers &&
+                                                      (std::get<3>(vars) ==
+                                                       helper::VarType::NUMBER);
+                            }
+                        }
 
-                        el_attr_vector->push_back(
-                          cmd_attr_name + "=\"" +
-                          std::to_string(std::lround(attr_val)) + "\"");
+                        if (is_all_vars_numbers) {
+                            auto attr_val = evalExpr(cmd_arg, *variables_);
+
+                            el_attr_vector->push_back(
+                              cmd_attr_name + "=\"" +
+                              std::to_string(std::lround(attr_val)) + "\"");
+                        } else {
+                            std::string var_replace_str = cmd_arg;
+                            for (auto vars : *variables_) {
+                                if ((std::get<3>(vars) ==
+                                     helper::VarType::STRING) &&
+                                    (cmd_arg.find(std::get<0>(vars)) !=
+                                     std::string::npos)) {
+                                    var_replace_str =
+                                      helper::replaceString(var_replace_str,
+                                                            cmd_arg,
+                                                            std::get<1>(vars));
+                                }
+                            }
+
+                            el_attr_vector->push_back(cmd_attr_name + "=\"" +
+                                                      var_replace_str + "\"");
+                        }
                     } else {
                         std::string attr_val_str;
 
                         if (cmd_attr.args()[0].type() == kdl::Type::Number) {
                             attr_val_str =
-                              std::to_string(cmd_attr.args()[0].as<int>());
+                              std::to_string(cmd_attr.args()[0].as<double>());
                         } else {
                             attr_val_str = reinterpret_cast<const char*>(
                               cmd_attr.args()[0].as<std::u8string>().c_str());
@@ -113,7 +141,7 @@ SvgBox::SvgBox(config::RowItem* row_item_parent, const kdl::Node& node_data)
                 }
 
                 el_str += "></" + svg_el + ">\n";
-                command_vector->push_back(el_str);
+                svg_cmds->push_back(el_str);
             }
         } else if (child.name() == u8"variable") {
 
@@ -126,41 +154,63 @@ SvgBox::SvgBox(config::RowItem* row_item_parent, const kdl::Node& node_data)
                       helper::executeCommand(reinterpret_cast<const char*>(
                         var_node.args()[0].as<std::u8string>().c_str()));
 
-                    var_vector_->emplace_back(
-                      var_name.substr(1),
-                      "",
-                      std::atoi(shell_cmd_output.c_str()));
+                    if (helper::isNumber(shell_cmd_output)) {
+                        variables_->emplace_back(
+                          var_name.substr(1),
+                          "",
+                          std::atoi(shell_cmd_output.c_str()),
+                          helper::VarType::NUMBER);
+                    } else {
+                        variables_->emplace_back(var_name.substr(1),
+                                                 shell_cmd_output,
+                                                 -1,
+                                                 helper::VarType::STRING);
+                    }
 
                 } else if (var_name.substr(0, 1) != "@") {
-                    int var_node_value = var_node.args()[0].as<int>();
-                    var_vector_->emplace_back(var_name, "", var_node_value);
+                    if (var_node.args()[0].type() == kdl::Type::Number) {
+                        variables_->emplace_back(
+                          var_name,
+                          "",
+                          var_node.args()[0].as<double>(),
+                          helper::VarType::NUMBER);
+                    } else {
+                        variables_->emplace_back(
+                          var_name,
+                          reinterpret_cast<const char*>(
+                            var_node.args()[0].as<std::u8string>().c_str()),
+                          -1,
+                          helper::VarType::STRING);
+                    }
 
                 } else {
-                    var_vector_->emplace_back(
+                    variables_->emplace_back(
                       var_name,
                       reinterpret_cast<const char*>(
                         var_node.args()[0].as<std::u8string>().c_str()),
-                      -1);
+                      -1,
+                      helper::VarType::UNRESOLVED);
                 }
             }
 
             int resolve_try_count = 0;
             bool is_var_resolved = false;
             while (!is_var_resolved && resolve_try_count++ < 100) {
-                int var_vector_idx = 0;
-                for (auto var_data : *var_vector_) {
+                int variables_idx = 0;
+                for (auto var_data : *variables_) {
                     if (std::get<0>(var_data).starts_with("@")) {
                         auto var_value =
-                          evalExpr(std::get<1>(var_data), *var_vector_);
+                          evalExpr(std::get<1>(var_data), *variables_);
                         std::get<0>(var_data) = std::get<0>(var_data).substr(1);
                         std::get<1>(var_data) = "";
                         std::get<2>(var_data) = var_value;
-                        (*var_vector_)[var_vector_idx] = var_data;
+                        std::get<3>(var_data) = helper::VarType::NUMBER;
+                        (*variables_)[variables_idx] = var_data;
                     }
-                    var_vector_idx++;
+                    variables_idx++;
                 }
                 is_var_resolved = true;
-                for (auto var_data : *var_vector_) {
+                for (auto var_data : *variables_) {
                     is_var_resolved = is_var_resolved &&
                                       !std::get<0>(var_data).starts_with("@");
                 }
@@ -212,7 +262,7 @@ SvgBox::SvgBox(config::RowItem* row_item_parent, const kdl::Node& node_data)
     // svg_string_ +=
     //   "<circle cx=\"60\" cy=\"60\" r=\"4\" fill=\"green\"></circle>\n";
 
-    for (auto svg_cmd : *command_vector) {
+    for (auto svg_cmd : *svg_cmds) {
         svg_string_ += svg_cmd;
     }
 
@@ -221,7 +271,7 @@ SvgBox::SvgBox(config::RowItem* row_item_parent, const kdl::Node& node_data)
     widget_type_ = "SvgBox";
     widget_ = Gtk::make_managed<Gtk::DrawingArea>();
     auto drawingarea_widget = static_cast<Gtk::DrawingArea*>(widget_);
-    drawingarea_widget->set_size_request(400, 400);
+    drawingarea_widget->set_size_request(vpwidth, vpheight);
 
     GError* error = nullptr;
     svg_handle_ = rsvg_handle_new_from_data(

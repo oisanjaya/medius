@@ -5,8 +5,10 @@
 
 namespace helper {
 
+enum VarType { NUMBER, STRING, UNRESOLVED }; 
+
 using StaticOrDynamicCommandTuple = std::tuple<bool, std::string, int>;
-using VarTuple = std::tuple<std::string, std::string, double>;
+using VarTuple = std::tuple<std::string, std::string, double, VarType>;
 
 struct CliConfig
 {
