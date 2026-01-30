@@ -7,9 +7,11 @@
 #include "sigc++/functors/mem_fun.h"
 #include "widgets/base_widget.hh"
 
+#include <cctype>
 #include <cmath>
 #include <cstdlib>
 #include <fmt/base.h>
+#include <fstream>
 #include <librsvg/rsvg.h>
 #include <spdlog/spdlog.h>
 #include <string>
@@ -163,9 +165,78 @@ SvgBox::tranverseCommandChild(kdl::Node cmdNode)
             auto el_attr_vector = std::make_unique<std::vector<std::string>>();
 
             for (auto cmd_attr : cmd_child.children()) {
-                el_attr_vector->push_back(evalSvgAttr(
-                  reinterpret_cast<const char*>(cmd_attr.name().c_str()),
-                  cmd_attr.args()[0]));
+                if (svg_el == "path" && cmd_attr.name() == u8"data") {
+
+                    std::string path_data_str = "d=\"";
+
+                    for (auto path_data : cmd_attr.children()) {
+
+                        std::string concat_args = "";
+                        bool is_relative = false;
+
+                        for (auto args : path_data.args()) {
+
+                            if (args.type() == kdl::Type::Number) {
+                                concat_args +=
+                                  std::to_string(args.as<int>()) + " ";
+                            } else {
+                                std::string args_value =
+                                  reinterpret_cast<const char*>(
+                                    (args.as<std::u8string>() + u8" ").c_str());
+
+                                if (helper::trim(args_value) == "relative") {
+                                    is_relative = true;
+                                } else {
+                                    concat_args += args_value;
+                                }
+                            }
+                        }
+
+                        auto evald_data = evalSvgAttr(
+                          path_data.name().substr(0, 1) == u8"@" ? "@" : "",
+                          concat_args);
+                        evald_data =
+                          helper::replaceString(evald_data, "=\"", " ");
+                        evald_data =
+                          helper::replaceString(evald_data, "\"", "");
+
+                        if (path_data.name().substr(0, 1) == u8"@") {
+                            path_data.set_name(path_data.name().substr(1));
+                        }
+
+                        char svg_cmd_char = 0;
+
+                        if (path_data.name() == u8"moveto") {
+                            svg_cmd_char = 'm';
+                        } else if (path_data.name() == u8"lineto") {
+                            svg_cmd_char = 'l';
+                        } else if (path_data.name() == u8"curveto") {
+                            svg_cmd_char = 'c';
+                        } else if (path_data.name() == u8"smoothcurveto") {
+                            svg_cmd_char = 's';
+                        } else if (path_data.name() == u8"quadraticto") {
+                            svg_cmd_char = 'q';
+                        } else if (path_data.name() == u8"smoothquadraticto") {
+                            svg_cmd_char = 't';
+                        } else if (path_data.name() == u8"arc") {
+                            svg_cmd_char = 'a';
+                        } else if (path_data.name() == u8"closepath") {
+                            svg_cmd_char = 'z';
+                        }
+
+                        if (!is_relative) {
+                            svg_cmd_char = std::toupper(svg_cmd_char);
+                        }
+                        path_data_str += svg_cmd_char + evald_data;
+                    }
+
+                    path_data_str += "\" ";
+                    el_attr_vector->push_back(path_data_str);
+                } else {
+                    el_attr_vector->push_back(evalSvgAttr(
+                      reinterpret_cast<const char*>(cmd_attr.name().c_str()),
+                      cmd_attr.args()[0]));
+                }
             }
 
             std::string el_str = "<" + svg_el + " ";
@@ -194,13 +265,7 @@ SvgBox::SvgBox(config::RowItem* row_item_parent, const kdl::Node& node_data)
 
     for (kdl::Node child : node_data.children()) {
 
-        if (child.name() == u8"command") {
-
-            auto cmd_result = tranverseCommandChild(child);
-            svg_cmds->insert(
-              svg_cmds->end(), cmd_result->begin(), cmd_result->end());
-
-        } else if (child.name() == u8"variable") {
+        if (child.name() == u8"variable") {
 
             for (auto var_node : child.children()) {
                 std::string var_name =
@@ -278,8 +343,36 @@ SvgBox::SvgBox(config::RowItem* row_item_parent, const kdl::Node& node_data)
                               "likely due to circular reference");
                 std::exit(-1);
             }
+        } else if (child.name() == u8"command") {
+
+            auto cmd_result = tranverseCommandChild(child);
+            svg_cmds->insert(
+              svg_cmds->end(), cmd_result->begin(), cmd_result->end());
+
         } else if (child.name() == u8"height") {
             vpheight = child.args()[0].as<int>();
+        } else if (child.name() == u8"embed") {
+            std::string filename = reinterpret_cast<const char*>(
+              child.args()[0].as<std::u8string>().c_str());
+            std::ifstream file(filename);
+            if (!file.is_open()) {
+                spdlog::warn(
+                  "Svg error: Could not open file {}, ignoring embed file.",
+                  filename);
+            } else {
+                std::string file_content;
+                std::string line;
+                while (std::getline(file, line)) {
+                    file_content += line + " ";
+                }
+                auto svg_tag_pos = file_content.find("<svg");
+                if (svg_tag_pos != std::string::npos) {
+                    file_content = file_content.substr(svg_tag_pos);
+                }
+                svg_cmds->push_back(
+                  std::move(file_content)); // Move to avoid unnecessary copies
+            }
+
         } else if (child.name() == u8"width") {
             vpwidth = child.args()[0].as<int>();
         } else if (child.name() == u8"viewbox_height") {
@@ -299,45 +392,13 @@ SvgBox::SvgBox(config::RowItem* row_item_parent, const kdl::Node& node_data)
       vbwidth > 0 ? std::to_string(vbwidth) : "100",
       vbheight > 0 ? std::to_string(vbheight) : "100");
 
-    // <svg width = "800px" height = "800px" viewBox = "0 0 24 24" fill =
-    // "none" xmlns = "http://www.w3.org/2000/svg">
-    // <path d = "M19 13.8C19 17.7764 15.866 21 12 21C8.13401 21 5 17.7764 5 "
-    // "13.8C5 12.8452 5.18069 11.9338 5.50883 11.1C6.54726 8.46135 "
-    // "12 3 12 3C12 3 17.4527 8.46135 18.4912 11.1C18.8193 11.9338 "
-    // "19 12.8452 19 13.8Z" stroke = "#000000" stroke - width =
-    // "2" stroke - linecap =
-    // "round" stroke - linejoin =
-    // "round" /></ svg>
-
-    // svg_string_ +=
-    //   "<svg fill=\"#000000\" stroke=\"blue\" width=\"50\" height=\"50\"\n"
-    //   "viewBox=\"0 0 32 " "32\" xmlns=\"http://www.w3.org/2000/svg\"\n"
-    //   "id=\"Layer_1\" " "data-name=\"Layer 1\"><path \n"
-    //   "d=\"M29.22,13.95h-.28v-2.07c0-4.75-5.76-8.61-12.84-8.61S3.26,7.14,3.26,\n"
-    //   "11.88v2.07h-.48c-.84,0-1.52,.68-1.52,1.52v1.06c0,.84,.68,1.52,1.52,1.\n"
-    //   "52h.48v2.07c0,4.74,5.76,8.6,12.84,8.6s12.84-3.86,12.84-8.6v-2.07h.28c.\n"
-    //   "84,0,1.52-.68,1.52-1.52v-1.06c0-.84-.68-1.52-1.52-1.52ZM16.1,4.78c5.85,\n"
-    //   "0,10.68,2.79,11.28,6.36H4.82c.6-3.57,5.43-6.36,11.28-6.36ZM4.76,12.\n"
-    //   "63H27.44v1.32H4.76v-1.32Zm11.34,14.58c-5.85,0-10.68-2.79-11.28-6.35h12.\n"
-    //   "49l1.8,3c.14,.23,.38,.36,.64,.36s.51-.14,.64-.36l1.8-3h5.17c-.6,3.56-5.\n"
-    //   "43,6.35-11.28,6.35Zm11.34-7.85h-5.66c-.26,0-.51,.14-.64,.36l-1.38,2.29-\n"
-    //   "1.38-2.29c-.14-.23-.38-.36-.64-.36H4.76v-1.32H27.44v1.32Zm1.78-2.82l-26.\n"
-    //   "46-.02,.02-1.08h1.22s0,0,0,0H28.19s0,0,0,0h1.02s.02,.02,.02,.02l-.02,1.\n"
-    //   "08Z\"/>\n</svg>\n";
-    // svg_string_ += "  <path d=\"M 50 150 \n";
-    // svg_string_ += "A 80 80 0 0 1 250 150\" fill=\"none\" stroke=\"blue\"
-    // \n"
-    //                "stroke-width=\"3\"></path>\n";
-    // svg_string_ +=
-    //   "<circle cx=\"50\" cy=\"50\" r=\"4\" fill=\"red\"></circle>\n";
-    // svg_string_ +=
-    //   "<circle cx=\"60\" cy=\"60\" r=\"4\" fill=\"green\"></circle>\n";
-
     for (auto svg_cmd : *svg_cmds) {
         svg_string_ += svg_cmd;
     }
 
     svg_string_ += "</svg>";
+
+    spdlog::debug("{}", svg_string_);
 
     widget_type_ = "SvgBox";
     widget_ = Gtk::make_managed<Gtk::DrawingArea>();
