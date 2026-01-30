@@ -1,8 +1,8 @@
 #include "widgets/svgbox_widget.hh"
 #include "gtkmm/drawingarea.h"
 #include "gtkmm/object.h"
-#include "helper/exprtk.hpp"
 #include "helper/globals.hh"
+#include "helper/tinyexpr.h"
 #include "kdlpp.h"
 #include "sigc++/functors/mem_fun.h"
 #include "widgets/base_widget.hh"
@@ -16,38 +16,37 @@
 
 namespace widgets {
 
-template<typename T>
-T
+double
 evalExpr(std::string expr, std::vector<helper::VarTuple> vars)
 {
-    typedef exprtk::symbol_table<T> symbol_table_t;
-    typedef exprtk::expression<T> expression_t;
-    typedef exprtk::parser<T> parser_t;
-
-    symbol_table_t symbol_table;
-
-    std::unique_ptr<T[]> var_arr(new T[vars.size()]);
+    double result;
+    std::unique_ptr<te_variable[]> var_arr(new te_variable[vars.size()]);
 
     int var_el_idx = 0;
-    for (auto var_el : vars) {
-        var_arr[var_el_idx++] = T(std::get<2>(var_el));
-    }
-
-    var_el_idx = 0;
+    int vars_idx = 0;
     for (auto var_el : vars) {
         if (!std::get<0>(var_el).starts_with("@")) {
-            symbol_table.add_variable(std::get<0>(var_el), var_arr[var_el_idx]);
+            var_arr[var_el_idx].name = std::get<0>(vars[vars_idx]).c_str();
+            var_arr[var_el_idx].address = &std::get<2>(vars[vars_idx]);
+            var_arr[var_el_idx].context = 0;
+            var_arr[var_el_idx].type = 0;
+            var_el_idx++;
         }
-        var_el_idx++;
+        vars_idx++;
     }
 
-    expression_t expression;
-    expression.register_symbol_table(symbol_table);
+    int err;
+    /* Compile the expression with variables. */
+    te_expr* texpr = te_compile(expr.c_str(), var_arr.get(), var_el_idx, &err);
 
-    parser_t parser;
-    parser.compile(expr, expression);
+    if (texpr) {
+        result = te_eval(texpr);
 
-    const T result = expression.value();
+        te_free(texpr);
+    } else {
+        spdlog::error("Parse error at {} with expression {}", err, expr);
+        std::exit(-1);
+    }
 
     return result;
 }
@@ -84,14 +83,14 @@ SvgBox::SvgBox(config::RowItem* row_item_parent, const kdl::Node& node_data)
                     if (cmd_attr_name.substr(0, 1) == "@") {
                         cmd_attr_name = cmd_attr_name.substr(1);
 
-                        auto attr_val = evalExpr<double>(
+                        auto attr_val = evalExpr(
                           reinterpret_cast<const char*>(
                             cmd_attr.args()[0].as<std::u8string>().c_str()),
                           *var_vector_);
 
                         el_attr_vector->push_back(
                           cmd_attr_name + "=\"" +
-                          std::to_string(std::lround(attr_val))+"\"");
+                          std::to_string(std::lround(attr_val)) + "\"");
                     } else {
                         std::string attr_val_str;
 
@@ -152,7 +151,7 @@ SvgBox::SvgBox(config::RowItem* row_item_parent, const kdl::Node& node_data)
                 for (auto var_data : *var_vector_) {
                     if (std::get<0>(var_data).starts_with("@")) {
                         auto var_value =
-                          evalExpr<double>(std::get<1>(var_data), *var_vector_);
+                          evalExpr(std::get<1>(var_data), *var_vector_);
                         std::get<0>(var_data) = std::get<0>(var_data).substr(1);
                         std::get<1>(var_data) = "";
                         std::get<2>(var_data) = var_value;

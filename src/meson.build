@@ -13,7 +13,7 @@ add_project_arguments(
 executable('medius',
   [
     'helper/globals.cc', 'main.cc', 'config/config.cc', 'config/row_item.cc', 
-    'helper/widget_css_provider.cc',
+    'helper/widget_css_provider.cc', 'helper/tinyexpr.c',
     'widgets/expander_item.cc', 'widgets/base_widget.cc', 'widgets/button_widget.cc', 
     'widgets/list_widget.cc', 'widgets/slider_widget.cc', 'widgets/image_widget.cc',
     'widgets/popover_widget.cc', 'widgets/textbox_widget.cc', 'widgets/svgbox_widget.cc', 
