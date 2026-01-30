@@ -2,6 +2,7 @@
 
 #include "config/row_item.hh"
 #include "helper/globals.hh"
+#include "kdlpp.h"
 #include "librsvg/rsvg.h"
 #include "widgets/base_widget.hh"
 namespace widgets {
@@ -16,6 +17,10 @@ class SvgBox : public BaseWidget
     void on_drawingarea_draw(const Cairo::RefPtr<Cairo::Context>& cr,
                              int width,
                              int height);
+    std::unique_ptr<std::vector<std::string>> tranverseCommandChild(
+      kdl::Node cmdNode);
+    std::string evalSvgAttr(std::string cmd_attr_name,
+                            kdl::Value cmd_attr_value);
 
   public:
     SvgBox(config::RowItem* row_item_parent, const kdl::Node& node_data);
