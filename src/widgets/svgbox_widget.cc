@@ -398,8 +398,6 @@ SvgBox::SvgBox(config::RowItem* row_item_parent, const kdl::Node& node_data)
 
     svg_string_ += "</svg>";
 
-    spdlog::debug("{}", svg_string_);
-
     widget_type_ = "SvgBox";
     widget_ = Gtk::make_managed<Gtk::DrawingArea>();
     auto drawingarea_widget = static_cast<Gtk::DrawingArea*>(widget_);
