@@ -5,7 +5,6 @@
 #include "gtkmm/box.h"
 #include "gtkmm/cssprovider.h"
 #include "gtkmm/enums.h"
-#include "gtkmm/object.h"
 #include "gtkmm/scale.h"
 #include "gtkmm/styleprovider.h"
 #include "helper/globals.hh"
