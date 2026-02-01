@@ -68,14 +68,35 @@ MainWindow::MainWindow()
       main_css_provider,
       GTK_STYLE_PROVIDER_PRIORITY_USER);
 
-    GtkWindow* main_window = GTK_WINDOW(this->gobj());
-
-    gtk_layer_init_for_window(main_window);
-    gtk_layer_set_layer(main_window, GTK_LAYER_SHELL_LAYER_TOP);
-    gtk_layer_set_keyboard_mode(main_window,
-                                GTK_LAYER_SHELL_KEYBOARD_MODE_ON_DEMAND);
     Gtk::Box* main_box = builder->get_widget<Gtk::Box>("main_box");
     helper::main_config.load(main_box, helper::cli_config.config_opt);
+
+    GtkWindow* main_window = GTK_WINDOW(this->gobj());
+
+    if (helper::main_config.getUseLayer() != config::NORMAL) {
+        gtk_layer_init_for_window(main_window);
+    }
+
+    switch (helper::main_config.getUseLayer()) {
+        case config::BACKGROUND:
+            gtk_layer_set_layer(main_window, GTK_LAYER_SHELL_LAYER_BACKGROUND);
+            break;
+        case config::BOTTOM:
+            gtk_layer_set_layer(main_window, GTK_LAYER_SHELL_LAYER_BOTTOM);
+            break;
+        case config::TOP:
+            gtk_layer_set_layer(main_window, GTK_LAYER_SHELL_LAYER_TOP);
+            break;
+        case config::OVERLAY:
+            gtk_layer_set_layer(main_window, GTK_LAYER_SHELL_LAYER_OVERLAY);
+            break;
+        case config::NORMAL:
+            spdlog::debug("NORMAL window");
+            break;
+    }
+
+    gtk_layer_set_keyboard_mode(main_window,
+                                GTK_LAYER_SHELL_KEYBOARD_MODE_ON_DEMAND);
 
     set_default_size(helper::main_config.getPanelWidth(), -1);
     set_size_request(helper::main_config.getPanelWidth(), -1);
@@ -88,29 +109,32 @@ MainWindow::MainWindow()
     main_box->set_halign(Gtk::Align::FILL);
     main_box->set_valign(Gtk::Align::START);
 
-    if (helper::main_config.getAnchorLeft()) {
-        gtk_layer_set_anchor(main_window, GTK_LAYER_SHELL_EDGE_LEFT, TRUE);
-        gtk_layer_set_margin(main_window,
-                             GTK_LAYER_SHELL_EDGE_LEFT,
-                             helper::main_config.getPanelMargin());
-    }
-    if (helper::main_config.getAnchorRight()) {
-        gtk_layer_set_anchor(main_window, GTK_LAYER_SHELL_EDGE_RIGHT, TRUE);
-        gtk_layer_set_margin(main_window,
-                             GTK_LAYER_SHELL_EDGE_RIGHT,
-                             helper::main_config.getPanelMargin());
-    }
-    if (helper::main_config.getAnchorTop()) {
-        gtk_layer_set_anchor(main_window, GTK_LAYER_SHELL_EDGE_TOP, TRUE);
-        gtk_layer_set_margin(main_window,
-                             GTK_LAYER_SHELL_EDGE_TOP,
-                             helper::main_config.getPanelMargin());
-    }
-    if (helper::main_config.getAnchorBottom()) {
-        gtk_layer_set_anchor(main_window, GTK_LAYER_SHELL_EDGE_BOTTOM, TRUE);
-        gtk_layer_set_margin(main_window,
-                             GTK_LAYER_SHELL_EDGE_BOTTOM,
-                             helper::main_config.getPanelMargin());
+    if (helper::main_config.getUseLayer() != config::NORMAL) {
+        if (helper::main_config.getAnchorLeft()) {
+            gtk_layer_set_anchor(main_window, GTK_LAYER_SHELL_EDGE_LEFT, TRUE);
+            gtk_layer_set_margin(main_window,
+                                 GTK_LAYER_SHELL_EDGE_LEFT,
+                                 helper::main_config.getPanelMargin());
+        }
+        if (helper::main_config.getAnchorRight()) {
+            gtk_layer_set_anchor(main_window, GTK_LAYER_SHELL_EDGE_RIGHT, TRUE);
+            gtk_layer_set_margin(main_window,
+                                 GTK_LAYER_SHELL_EDGE_RIGHT,
+                                 helper::main_config.getPanelMargin());
+        }
+        if (helper::main_config.getAnchorTop()) {
+            gtk_layer_set_anchor(main_window, GTK_LAYER_SHELL_EDGE_TOP, TRUE);
+            gtk_layer_set_margin(main_window,
+                                 GTK_LAYER_SHELL_EDGE_TOP,
+                                 helper::main_config.getPanelMargin());
+        }
+        if (helper::main_config.getAnchorBottom()) {
+            gtk_layer_set_anchor(
+              main_window, GTK_LAYER_SHELL_EDGE_BOTTOM, TRUE);
+            gtk_layer_set_margin(main_window,
+                                 GTK_LAYER_SHELL_EDGE_BOTTOM,
+                                 helper::main_config.getPanelMargin());
+        }
     }
 
     if (main_box) {

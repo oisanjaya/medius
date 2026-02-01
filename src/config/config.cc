@@ -205,7 +205,7 @@ Config::load(Gtk::Box* parent_box, const std::string& config)
 
     for (kdl::Node node : config_) {
         if (node.name() == u8"anchor") {
-            for (auto anchorargs: node.args()) {
+            for (auto anchorargs : node.args()) {
                 if (anchorargs.as<std::u8string>() == u8"left") {
                     anchor_left_ = true;
                 } else if (anchorargs.as<std::u8string>() == u8"right") {
@@ -256,6 +256,22 @@ Config::load(Gtk::Box* parent_box, const std::string& config)
 
         if (node.name() == u8"close_on_escape") {
             close_on_escape_ = node.args()[0].as<int>();
+        }
+
+        if (node.name() == u8"use_layer") {
+            auto config_layer = node.args()[0].as<std::u8string>();
+
+            if (config_layer == u8"background") {
+                use_layer_ = BACKGROUND;
+            } else if (config_layer == u8"overlay") {
+                use_layer_ = OVERLAY;
+            } else if (config_layer == u8"top") {
+                use_layer_ = TOP;
+            } else if (config_layer == u8"bottom") {
+                use_layer_ = BOTTOM;
+            } else if (config_layer == u8"normal") {
+                use_layer_ = NORMAL;
+            }
         }
     }
 }
@@ -334,24 +350,40 @@ Config::getListItemBoxHoverColor()
     return list_item_box_hover_color_;
 }
 
-bool Config::getAnchorLeft() {
+bool
+Config::getAnchorLeft()
+{
     return anchor_left_;
 }
 
-bool Config::getAnchorRight() {
+bool
+Config::getAnchorRight()
+{
     return anchor_right_;
 }
 
-bool Config::getAnchorTop() {
+bool
+Config::getAnchorTop()
+{
     return anchor_top_;
 }
 
-bool Config::getAnchorBottom() {
+bool
+Config::getAnchorBottom()
+{
     return anchor_bottom_;
 }
 
-int Config::getCloseOnEscape() {
+int
+Config::getCloseOnEscape()
+{
     return close_on_escape_;
+}
+
+LayerType
+Config::getUseLayer()
+{
+    return use_layer_;
 }
 
 }

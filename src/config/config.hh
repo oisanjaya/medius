@@ -8,6 +8,8 @@
 
 namespace config {
 
+enum LayerType {BACKGROUND, BOTTOM, TOP, OVERLAY, NORMAL};
+
 class Config
 {
     int width_, margin_, spacing_, animation_duration_, rounded_corner_;
@@ -15,6 +17,7 @@ class Config
     bool anchor_right_{ false };
     bool anchor_top_{ false };
     bool anchor_bottom_{ false };
+    LayerType use_layer_{ TOP };
     int padding_{ DEFAULT_PANEL_PADDING };
     int close_timeout_{ -1 };
     int close_on_escape_{ -1 };
@@ -56,5 +59,6 @@ class Config
     bool getAnchorBottom();
     const std::string getListItemBoxHoverColor();
     int getCloseOnEscape();
+    LayerType getUseLayer();
 };
 } // namespace config
