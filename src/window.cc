@@ -164,6 +164,21 @@ MainWindow::MainWindow()
 
         add_controller(focus_ctrl);
     }
+
+    if (helper::main_config.getCloseOnEscape() > 0) {
+        auto keypress_controller = Gtk::EventControllerKey::create();
+        keypress_controller->signal_key_pressed().connect(
+          [this](guint keyval, guint, Gdk::ModifierType) -> bool {
+              if (keyval == GDK_KEY_Escape) {
+                  close();
+                  return true;
+              }
+              return false;
+          },
+          false);
+
+        add_controller(keypress_controller);
+    }
 }
 
 void
