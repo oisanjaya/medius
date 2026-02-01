@@ -1,10 +1,12 @@
 #include "window.hh"
 #include "config/config.hh"
+#include "gdkmm/display.h"
 #include "gtk/gtk.h"
 #include "gtk4-layer-shell/gtk4-layer-shell.h"
 #include "gtkmm/box.h"
 #include "gtkmm/cssprovider.h"
 #include "gtkmm/enums.h"
+#include "gtkmm/eventcontrollerfocus.h"
 #include "gtkmm/scale.h"
 #include "gtkmm/styleprovider.h"
 #include "helper/globals.hh"
@@ -19,7 +21,6 @@
 #include <sstream>
 #include <string>
 #include <sys/types.h>
-
 
 #include <gtkmm.h>
 #include <librsvg/rsvg.h>
@@ -156,26 +157,33 @@ MainWindow::MainWindow()
       GTK_STYLE_PROVIDER_PRIORITY_USER);
 
     if (helper::main_config.getCloseTimeout() > 0) {
-        auto motion_ctrl = Gtk::EventControllerMotion::create();
+        auto focus_ctrl = Gtk::EventControllerFocus::create();
 
-        motion_ctrl->signal_enter().connect(
-          sigc::mem_fun(*this, &MainWindow::on_mouse_enter));
-        motion_ctrl->signal_leave().connect(
-          sigc::mem_fun(*this, &MainWindow::on_mouse_leave));
+        focus_ctrl->signal_leave().connect([this]() { setCloseTimeout(); });
+        focus_ctrl->signal_enter().connect([this]() { cancelCloseTimeout(); });
 
-        add_controller(motion_ctrl);
+        add_controller(focus_ctrl);
     }
 }
 
 void
-MainWindow::on_mouse_leave()
+MainWindow::cancelCloseTimeout()
+{
+    if (close_timer_.connected()) {
+        spdlog::debug("Close Timer cancelled.");
+        close_timer_.disconnect();
+    }
+}
+
+void
+MainWindow::setCloseTimeout()
 {
     if (helper::disable_lost_focus_quit) {
-        spdlog::debug("Pointer leaving window; but disable_lost_focus_quit");
+        spdlog::debug("Close Timer prevented.");
         return;
     }
 
-    spdlog::debug("Pointer leaving window; Window will closed in {}",
+    spdlog::debug("Window will closed in {}",
                   helper::main_config.getCloseTimeout());
     close_timer_ = Glib::signal_timeout().connect(
       [this]() {
@@ -183,15 +191,6 @@ MainWindow::on_mouse_leave()
           return false;
       },
       helper::main_config.getCloseTimeout());
-}
-
-void
-MainWindow::on_mouse_enter(double x, double y)
-{
-    if (close_timer_.connected()) {
-        spdlog::debug("Pointer returned; Timer cancelled.");
-        close_timer_.disconnect();
-    }
 }
 
 void

@@ -11,8 +11,8 @@ class MainWindow : public Gtk::ApplicationWindow
     void connectGtkButtonSignals(widgets::BaseWidget* widget);
     void connectGtkToggleButtonSignals(widgets::BaseWidget* widget);
 
-    void on_mouse_enter(double x, double y);
-    void on_mouse_leave();
+    void setCloseTimeout();
+    void cancelCloseTimeout();
 
   protected:
     void on_map() override;
