@@ -12,6 +12,7 @@
 #include "helper/globals.hh"
 
 #include <cstdlib>
+#include <exception>
 #include <fmt/base.h>
 #include <fmt/format.h>
 #include <fstream>
@@ -69,7 +70,12 @@ MainWindow::MainWindow()
       GTK_STYLE_PROVIDER_PRIORITY_USER);
 
     Gtk::Box* main_box = builder->get_widget<Gtk::Box>("main_box");
-    helper::main_config.load(main_box, helper::cli_config.config_opt);
+    try {
+        helper::main_config.load(main_box, helper::cli_config.config_opt);
+    } catch (const std::exception& ex) {
+        spdlog::error("Error loading config file: {}", ex.what());
+        std::exit(-1);
+    }
 
     GtkWindow* main_window = GTK_WINDOW(this->gobj());
     if (helper::main_config.getTitle().length() > 0) {

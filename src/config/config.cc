@@ -392,7 +392,8 @@ Config::getUseLayer()
 }
 
 std::string
-Config::getTitle() {
+Config::getTitle()
+{
     return title_;
 }
 
