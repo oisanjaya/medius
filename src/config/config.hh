@@ -21,6 +21,7 @@ class Config
     int padding_{ DEFAULT_PANEL_PADDING };
     int close_timeout_{ -1 };
     int close_on_escape_{ -1 };
+    std::string title_;
     std::string list_item_box_hover_color_{ DEFAULT_LIST_ITEM_BOX_HOVER_COLOR };
     std::string config_file_;
     kdl::Document config_;
@@ -57,6 +58,7 @@ class Config
     bool getAnchorRight();
     bool getAnchorTop();
     bool getAnchorBottom();
+    std::string getTitle();
     const std::string getListItemBoxHoverColor();
     int getCloseOnEscape();
     LayerType getUseLayer();

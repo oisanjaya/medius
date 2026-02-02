@@ -72,6 +72,12 @@ MainWindow::MainWindow()
     helper::main_config.load(main_box, helper::cli_config.config_opt);
 
     GtkWindow* main_window = GTK_WINDOW(this->gobj());
+    gtk_layer_set_namespace(main_window, "medius");
+    if (helper::main_config.getTitle().length() > 0) {
+        set_title(helper::main_config.getTitle());
+    } else {
+        set_title("medius");
+    }
 
     if (helper::main_config.getUseLayer() != config::NORMAL) {
         gtk_layer_init_for_window(main_window);

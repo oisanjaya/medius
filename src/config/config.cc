@@ -258,6 +258,11 @@ Config::load(Gtk::Box* parent_box, const std::string& config)
             close_on_escape_ = node.args()[0].as<int>();
         }
 
+        if (node.name() == u8"title") {
+            title_ = reinterpret_cast<const char*>(
+              node.args()[0].as<std::u8string>().c_str());
+        }
+
         if (node.name() == u8"use_layer") {
             auto config_layer = node.args()[0].as<std::u8string>();
 
@@ -384,6 +389,11 @@ LayerType
 Config::getUseLayer()
 {
     return use_layer_;
+}
+
+std::string
+Config::getTitle() {
+    return title_;
 }
 
 }
