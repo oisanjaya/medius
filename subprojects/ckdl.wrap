@@ -1,4 +1,4 @@
 [wrap-git]
 directory = ckdl
-url = https://github.com/tjol/ckdl.git
-revision = main
+url = https://github.com/oisanjaya/ckdl.git
+revision = error_with_lineno
