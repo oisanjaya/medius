@@ -1,6 +1,7 @@
 #include "widgets/base_widget.hh"
 #include "config/row_item.hh"
 #include "gtkmm/widget.h"
+#include "helper/globals.hh"
 #include "kdlpp.h"
 #include <cctype>
 #include <spdlog/spdlog.h>
@@ -30,6 +31,9 @@ BaseWidget::BaseWidget(config::RowItem* row_item_parent,
                       [](unsigned char c) { return std::tolower(c); });
                 }
             }
+        } else if (child.name() == u8"tooltip") {
+            tooltip_ = reinterpret_cast<const char*>(
+              child.args()[0].as<std::u8string>().c_str());
         }
     }
 }
@@ -52,6 +56,18 @@ const std::string
 BaseWidget::getWidgetType(void)
 {
     return widget_type_;
+}
+
+void
+BaseWidget::setTooltip(std::string text)
+{
+    if (text.length() > 0) {
+        if (helper::isValidPangoMarkup(text)) {
+            widget_->set_tooltip_markup(text);
+        } else {
+            widget_->set_tooltip_text(text);
+        }
+    }
 }
 
 }

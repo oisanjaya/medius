@@ -66,6 +66,7 @@ RowItem::RowItem(Gtk::Box* parent_box,
         spinner_ = Gtk::make_managed<Gtk::Spinner>();
         spinner_->set_halign(Gtk::Align::CENTER);
         spinner_->set_valign(Gtk::Align::CENTER);
+        spinner_->set_visible(false);
 
         overlay_ = new Gtk::Overlay();
         overlay_->set_halign(Gtk::Align::FILL);
@@ -275,9 +276,11 @@ RowItem::setSpinner(bool spinning)
 {
     if (spinner_) {
         if (spinning) {
+            spinner_->set_visible(true);
             spinner_->start();
 
         } else {
+            spinner_->set_visible(false);
             spinner_->stop();
         }
     }

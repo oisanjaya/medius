@@ -108,6 +108,8 @@ ImageWidget::ImageWidget(config::RowItem* row_item_parent,
           },
           title_interval_);
     }
+
+    setTooltip(tooltip_);
 }
 ImageWidget::~ImageWidget() {}
 

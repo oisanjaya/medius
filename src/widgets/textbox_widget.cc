@@ -43,6 +43,7 @@ TextBox::TextBox(config::RowItem* row_item_parent, const kdl::Node& node_data)
             helper::executeCommand(command_);
         });
     }
+    setTooltip(tooltip_);
 }
 
 TextBox::~TextBox() {}

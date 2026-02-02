@@ -19,6 +19,61 @@ trim(const std::string& s)
     return (start == std::string::npos) ? "" : s.substr(start, end - start + 1);
 }
 
+struct PangoAttrListDeleter
+{
+    void operator()(PangoAttrList* p) const noexcept
+    {
+        if (p)
+            pango_attr_list_unref(p);
+    }
+};
+
+struct GCharDeleter
+{
+    void operator()(char* p) const noexcept { g_free(p); }
+};
+
+struct GErrorDeleter
+{
+    void operator()(GError* e) const noexcept
+    {
+        if (e)
+            g_error_free(e);
+    }
+};
+
+bool
+isValidPangoMarkup(std::string_view text)
+{
+    if (text.empty())
+        return false;
+
+    std::unique_ptr<PangoAttrList, PangoAttrListDeleter> attrs;
+    std::unique_ptr<char, GCharDeleter> parsed_text;
+    std::unique_ptr<GError, GErrorDeleter> error;
+
+    PangoAttrList* raw_attrs = nullptr;
+    char* raw_parsed_text = nullptr;
+    GError* raw_error = nullptr;
+
+    gboolean result =
+      pango_parse_markup(text.data(),                   // Input string
+                         static_cast<int>(text.size()), // Length
+                         0,                             // Flags
+                         &raw_attrs,                    // Output attributes
+                         &raw_parsed_text,              // Output plain text
+                         nullptr,   // Accelerator char (optional)
+                         &raw_error // Error output
+      );
+
+    // Transfer ownership to smart pointers
+    attrs.reset(raw_attrs);
+    parsed_text.reset(raw_parsed_text);
+    error.reset(raw_error);
+
+    return result == TRUE;
+}
+
 bool
 isNumber(const std::string& str)
 {

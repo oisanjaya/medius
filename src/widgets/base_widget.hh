@@ -14,6 +14,7 @@ class BaseWidget
 {
   protected:
     std::string label_;
+    std::string tooltip_;
     std::string label_no_space_;
 
     std::string widget_type_;
@@ -31,6 +32,7 @@ class BaseWidget
     const std::string getWidgetType(void);
 
     const std::string getLabel(void);
+    void setTooltip(std::string text);
 };
 
 }
