@@ -52,6 +52,6 @@ main(int argc, char* argv[])
         spdlog::set_level(spdlog::level::from_str(helper::cli_config.log_level));
     }
 
-    auto app = Gtk::Application::create("id.my.oisanjaya.medius");
+    auto app = Gtk::Application::create();
     return app->make_window_and_run<MainWindow>(0, nullptr);
 }
