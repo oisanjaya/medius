@@ -29,11 +29,11 @@ Also checkout [wiki](https://github.com/oisanjaya/medius/wiki) section.
 
 ## Building
 
-`git clone https://github.com/oisanjaya/medius.git`
-`cd medius`
-`mkdir build`
-`meson setup build`
-`ninja -C build`
+    `git clone https://github.com/oisanjaya/medius.git`
+    `cd medius`
+    `mkdir build`
+    `meson setup build`
+    `ninja -C build`
 
 Then you can copy `medius/build/src/medius` to any directory you want. You can invoke quick panel by calling this program (e.g. do key bind in niri, or attach to a on-click event of waybar modules). Installation process does not automatically create [config file](https://github.com/oisanjaya/medius.git) nor create any directoy for it. 
 
