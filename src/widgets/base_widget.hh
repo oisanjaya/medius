@@ -16,6 +16,7 @@ class BaseWidget
     std::string label_;
     std::string tooltip_;
     std::string label_no_space_;
+    int rotation_{ 0 };
 
     std::string widget_type_;
     Gtk::Widget* widget_{ nullptr };

@@ -31,6 +31,8 @@ BaseWidget::BaseWidget(config::RowItem* row_item_parent,
                       [](unsigned char c) { return std::tolower(c); });
                 }
             }
+        } else if (child.name() == u8"rotation") {
+            rotation_ = child.args()[0].as<int>();
         } else if (child.name() == u8"tooltip") {
             tooltip_ = reinterpret_cast<const char*>(
               child.args()[0].as<std::u8string>().c_str());
