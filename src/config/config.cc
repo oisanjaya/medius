@@ -8,6 +8,7 @@
 #include <fmt/core.h>
 #include <fmt/ranges.h>
 #include <fstream>
+#include <memory>
 #include <optional>
 #include <spdlog/spdlog.h>
 #include <string>
@@ -27,14 +28,7 @@ const char* Config::CONFIG_PATH_ENV = "MEDIUS_CONFIG_DIR";
 
 Config::Config() {}
 
-Config::~Config()
-{
-    for (auto row_item : rows_) {
-        if (row_item) {
-            delete row_item;
-        }
-    }
-}
+Config::~Config() {}
 
 std::vector<std::string>
 Config::tryExpandPath(const std::string& base, const std::string& filename)
@@ -220,9 +214,8 @@ Config::load(Gtk::Box* parent_box, const std::string& config)
 
         if (node.name() == u8"rows") {
             for (kdl::Node row_node : node.children()) {
-                RowItem* cur_row_item =
-                  new RowItem(parent_box, row_node, &rows_);
-                rows_.push_back(cur_row_item);
+                rows_.push_back(
+                  std::make_shared<RowItem>(parent_box, row_node, &rows_));
             }
         }
 
@@ -287,24 +280,24 @@ Config::getRowSize()
     return rows_.size();
 }
 
-std::optional<RowItem*>
+std::shared_ptr<RowItem>
 Config::getRow(const std::string& name)
 {
-    for (RowItem* row_item : rows_) {
+    for (auto row_item : rows_) {
         if (row_item->getName() == name) {
             return row_item;
         }
     }
-    return std::nullopt;
+    return nullptr;
 }
 
-std::optional<RowItem*>
+std::shared_ptr<RowItem>
 Config::getRow(size_t index)
 {
     if (index < rows_.size()) {
         return rows_[index];
     }
-    return std::nullopt;
+    return nullptr;
 }
 
 int

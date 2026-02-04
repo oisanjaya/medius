@@ -4,6 +4,7 @@
 #include "gtkmm/enums.h"
 #include "kdlpp.h"
 #include "widgets/base_widget.hh"
+#include <memory>
 #include <spdlog/spdlog.h>
 #include <string>
 
@@ -18,9 +19,8 @@ ExpanderItem::ExpanderItem(config::RowItem* row_item_parent,
     expander_box_ = new Gtk::Box{ Gtk::Orientation::VERTICAL };
 
     for (auto child : node_data_.children()) {
-        auto child_widget =
-          new config::RowItem(expander_box_, child, &children_);
-        children_.push_back(child_widget);
+        children_.push_back(
+          std::make_shared<config::RowItem>(expander_box_, child, &children_));
     }
 }
 

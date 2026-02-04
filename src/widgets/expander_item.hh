@@ -12,7 +12,7 @@ class ExpanderItem
     std::u8string name_;
     bool expanded_{ false };
     kdl::Node node_data_;
-    std::vector<config::RowItem*> children_;
+    std::vector<std::shared_ptr<config::RowItem>> children_;
     config::RowItem* row_item_parent_;
 
   public:

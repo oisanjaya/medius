@@ -25,7 +25,7 @@ class Config
     std::string list_item_box_hover_color_{ DEFAULT_LIST_ITEM_BOX_HOVER_COLOR };
     std::string config_file_;
     kdl::Document config_;
-    std::vector<RowItem*> rows_;
+    std::vector<std::shared_ptr<RowItem>> rows_;
 
   public:
     static const std::vector<std::string> CONFIG_DIRS;
@@ -45,8 +45,8 @@ class Config
     void load(Gtk::Box* parent_box, const std::string& config);
 
     size_t getRowSize();
-    std::optional<RowItem*> getRow(const std::string& name);
-    std::optional<RowItem*> getRow(size_t index);
+    std::shared_ptr<RowItem> getRow(const std::string& name);
+    std::shared_ptr<RowItem> getRow(size_t index);
     int getPanelWidth();
     int getPanelMargin();
     int getPanelPadding();

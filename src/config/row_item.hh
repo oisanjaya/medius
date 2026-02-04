@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstddef>
+#include <memory>
 #include <vector>
 
 #include "gtkmm/box.h"
@@ -24,9 +25,9 @@ class RowItem
     std::string enabled_;
     int enabled_interval_{ -1 };
     bool dynamic_enabled_{ false };
-    std::vector<RowItem*> nested_rows_;
+    std::vector<std::shared_ptr<RowItem>> nested_rows_;
     std::vector<widgets::BaseWidget*> widgets_;
-    std::vector<config::RowItem*>* row_item_storage_;
+    std::vector<std::shared_ptr<RowItem>>* row_item_storage_;
     Gtk::Revealer* revealer_;
     Gtk::Overlay* overlay_;
     Gtk::Spinner* spinner_{ nullptr };
@@ -37,7 +38,7 @@ class RowItem
   public:
     RowItem(Gtk::Box* parent_box,
             const kdl::Node& node_data,
-            std::vector<config::RowItem*>* row_item_storage = nullptr,
+            std::vector<std::shared_ptr<RowItem>>* row_item_storage = nullptr,
             RowItem* parent_row_item = nullptr);
     ~RowItem();
 

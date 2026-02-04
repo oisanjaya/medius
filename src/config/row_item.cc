@@ -16,6 +16,7 @@
 #include "widgets/svgbox_widget.hh"
 #include "widgets/textbox_widget.hh"
 #include <cstddef>
+#include <memory>
 #include <spdlog/spdlog.h>
 #include <string>
 #include <vector>
@@ -24,7 +25,7 @@ namespace config {
 
 RowItem::RowItem(Gtk::Box* parent_box,
                  const kdl::Node& node_data,
-                 std::vector<config::RowItem*>* row_item_storage,
+                 std::vector<std::shared_ptr<RowItem>>* row_item_storage,
                  RowItem* parent_row_item)
   : parent_row_item_(parent_row_item)
   , row_item_storage_(row_item_storage)
@@ -92,10 +93,8 @@ RowItem::RowItem(Gtk::Box* parent_box,
             row_box_->append(*nested_row);
 
             for (kdl::Node row_node : child.children()) {
-                auto nested_row_item =
-                  new RowItem(nested_row, row_node, &nested_rows_, this);
-
-                nested_rows_.push_back(nested_row_item);
+                nested_rows_.push_back(std::make_shared<RowItem>(
+                  nested_row, row_node, &nested_rows_, this));
             }
         } else if (child.name() == u8"button") {
             auto widget = new widgets::ButtonWidget(this, child);
@@ -167,10 +166,6 @@ RowItem::RowItem(Gtk::Box* parent_box,
 
 RowItem::~RowItem()
 {
-    for (auto ptr : nested_rows_) {
-        delete ptr;
-    }
-
     for (auto ptr : widgets_) {
         delete ptr;
     }
@@ -211,7 +206,7 @@ RowItem::getRowHeight()
 void
 RowItem::toggleExpander(widgets::ExpanderItem* expander_item)
 {
-    if (parent_row_item_){
+    if (parent_row_item_) {
         parent_row_item_->toggleExpander(expander_item);
         return;
     }
