@@ -26,7 +26,7 @@ class RowItem
     int enabled_interval_{ -1 };
     bool dynamic_enabled_{ false };
     std::vector<std::shared_ptr<RowItem>> nested_rows_;
-    std::vector<widgets::BaseWidget*> widgets_;
+    std::vector<std::shared_ptr<widgets::BaseWidget>> widgets_;
     std::vector<std::shared_ptr<RowItem>>* row_item_storage_;
     Gtk::Revealer* revealer_;
     Gtk::Overlay* overlay_;
@@ -43,7 +43,7 @@ class RowItem
     ~RowItem();
 
     std::string getName();
-    widgets::BaseWidget* getWidget(size_t idx);
+    std::shared_ptr<widgets::BaseWidget> getWidget(size_t idx);
     Gtk::Box* getRowBox();
     bool isExpanderBusy();
     size_t getWidgetCount();

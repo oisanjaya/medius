@@ -97,32 +97,32 @@ RowItem::RowItem(Gtk::Box* parent_box,
                   nested_row, row_node, &nested_rows_, this));
             }
         } else if (child.name() == u8"button") {
-            auto widget = new widgets::ButtonWidget(this, child);
+            auto widget = std::make_shared<widgets::ButtonWidget>(this, child);
 
             widgets_.push_back(widget);
             row_box_->append(*widget->getWidget());
         } else if (child.name() == u8"slider") {
-            auto widget = new widgets::SliderWidget(this, child);
+            auto widget = std::make_shared<widgets::SliderWidget>(this, child);
 
             widgets_.push_back(widget);
             row_box_->append(*widget->getWidget());
         } else if (child.name() == u8"list") {
-            auto widget = new widgets::ListWidget(this, child);
+            auto widget = std::make_shared<widgets::ListWidget>(this, child);
 
             widgets_.push_back(widget);
             row_box_->append(*widget->getWidget());
         } else if (child.name() == u8"image") {
-            auto widget = new widgets::ImageWidget(this, child);
+            auto widget = std::make_shared<widgets::ImageWidget>(this, child);
 
             widgets_.push_back(widget);
             row_box_->append(*widget->getWidget());
         } else if (child.name() == u8"textbox") {
-            auto widget = new widgets::TextBox(this, child);
+            auto widget = std::make_shared<widgets::TextBox>(this, child);
 
             widgets_.push_back(widget);
             row_box_->append(*widget->getWidget());
         } else if (child.name() == u8"svgbox") {
-            auto widget = new widgets::SvgBox(this, child);
+            auto widget = std::make_shared<widgets::SvgBox>(this, child);
 
             widgets_.push_back(widget);
             row_box_->append(*widget->getWidget());
@@ -166,10 +166,6 @@ RowItem::RowItem(Gtk::Box* parent_box,
 
 RowItem::~RowItem()
 {
-    for (auto ptr : widgets_) {
-        delete ptr;
-    }
-
     if (revealer_) {
         delete revealer_;
     }
@@ -185,7 +181,7 @@ RowItem::getName()
     return reinterpret_cast<const char*>(name_.c_str());
 }
 
-widgets::BaseWidget*
+std::shared_ptr<widgets::BaseWidget>
 RowItem::getWidget(size_t idx)
 {
     return widgets_[idx];
@@ -247,7 +243,8 @@ RowItem::regenerateList()
         for (size_t wid = 0; wid < sibling_row_item->getWidgetCount(); wid++) {
             auto row_widget = sibling_row_item->getWidget(wid);
             if (row_widget->getWidgetType() == "List") {
-                static_cast<widgets::ListWidget*>(row_widget)->regenerate();
+                std::static_pointer_cast<widgets::ListWidget>(row_widget)
+                  ->regenerate();
                 return;
             }
         }
