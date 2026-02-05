@@ -53,7 +53,7 @@ RowItem::RowItem(Gtk::Box* parent_box,
         overlay_box->add_css_class("medius-row-expander-box");
         overlay_box->set_name("medius-row-expander-box");
 
-        revealer_ = new Gtk::Revealer();
+        revealer_ = Gtk::make_managed<Gtk::Revealer>();
         overlay_box->add_css_class("medius-row-expander");
         overlay_box->set_name("medius-row-expander");
         revealer_->set_transition_type(Gtk::RevealerTransitionType::SLIDE_DOWN);
@@ -69,7 +69,7 @@ RowItem::RowItem(Gtk::Box* parent_box,
         spinner_->set_valign(Gtk::Align::CENTER);
         spinner_->set_visible(false);
 
-        overlay_ = new Gtk::Overlay();
+        overlay_ = Gtk::make_managed<Gtk::Overlay>();
         overlay_->set_halign(Gtk::Align::FILL);
         overlay_->set_valign(Gtk::Align::FILL);
         overlay_->set_hexpand();
@@ -164,16 +164,7 @@ RowItem::RowItem(Gtk::Box* parent_box,
     }
 }
 
-RowItem::~RowItem()
-{
-    if (revealer_) {
-        delete revealer_;
-    }
-
-    if (overlay_) {
-        delete overlay_;
-    }
-}
+RowItem::~RowItem() {}
 
 std::string
 RowItem::getName()
