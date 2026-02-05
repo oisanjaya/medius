@@ -110,18 +110,18 @@ SliderWidget::SliderWidget(config::RowItem* row_item_parent,
 
             slider_box->append(*but_widget);
         } else {
-            Gtk::Image slider_image;
-            slider_image.add_css_class("medius-slider-image");
-            slider_image.set_name("medius-slider-image");
-            slider_image.set_from_icon_name(icon_on_);
+            auto slider_image = Gtk::make_managed<Gtk::Image>();
+            slider_image->add_css_class("medius-slider-image");
+            slider_image->set_name("medius-slider-image");
+            slider_image->set_from_icon_name(icon_on_);
 
             if (icon_on_ != "none") {
-                slider_box->append(slider_image);
+                slider_box->append(*slider_image);
             }
         }
     }
 
-    scale_widget_ = new Gtk::Scale{ Gtk::Orientation::HORIZONTAL };
+    scale_widget_ = Gtk::make_managed<Gtk::Scale>(Gtk::Orientation::HORIZONTAL);
     scale_widget_->add_css_class("medius-slider-scale");
     scale_widget_->set_name("medius-slider-scale");
     scale_widget_->set_range(range_low_, range_high_);
@@ -130,18 +130,17 @@ SliderWidget::SliderWidget(config::RowItem* row_item_parent,
 
     scale_widget_->signal_value_changed().connect([this]() { onChange(); });
 
-    Gtk::Box* slider_box_with_label;
     if (!is_label_hidden_) {
-        Gtk::Label slider_label{ label_ };
-        slider_label.add_css_class("medius-slider_label");
-        slider_label.set_name("medius-slider_label");
-        slider_box_with_label = new Gtk::Box{ Gtk::Orientation::VERTICAL };
+        auto slider_label = Gtk::make_managed<Gtk::Label>(label_);
+        slider_label->add_css_class("medius-slider_label");
+        slider_label->set_name("medius-slider_label");
+        auto slider_box_with_label = Gtk::make_managed<Gtk::Box>(Gtk::Orientation::VERTICAL);
         slider_box_with_label->add_css_class("medius-slider-box-with-label");
         slider_box_with_label->set_name("medius-slider-box-with-label");
         slider_box_with_label->set_spacing(
           helper::main_config.getChildSpacing());
         slider_box_with_label->append(*scale_widget_);
-        slider_box_with_label->append(slider_label);
+        slider_box_with_label->append(*slider_label);
         slider_box->append(*slider_box_with_label);
     } else {
         slider_box->append(*scale_widget_);

@@ -16,6 +16,8 @@ ExpanderItem::ExpanderItem(config::RowItem* row_item_parent,
   , node_data_(node_data)
   , row_item_parent_(row_item_parent)
 {
+    // not Gtk::make_managed because this box gonna parent-unparent
+    // by parent's RowItem
     expander_box_ = new Gtk::Box{ Gtk::Orientation::VERTICAL };
 
     for (auto child : node_data_.children()) {

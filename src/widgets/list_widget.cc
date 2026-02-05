@@ -181,10 +181,10 @@ ListWidget::regenerate_done(std::string generate_result)
     }
 
     for (auto list_datum : list_data_) {
-        Gtk::Box list_item_box{ Gtk::Orientation::HORIZONTAL, 0 };
+        auto list_item_box = Gtk::make_managed<Gtk::Box>(Gtk::Orientation::HORIZONTAL, 0);
 
-        list_item_box.add_css_class("medius-list-item-box");
-        list_item_box.set_name("medius-list-item-box");
+        list_item_box->add_css_class("medius-list-item-box");
+        list_item_box->set_name("medius-list-item-box");
 
         auto list_item_label =
           Gtk::make_managed<Gtk::Label>(std::get<1>(list_datum));
@@ -192,7 +192,7 @@ ListWidget::regenerate_done(std::string generate_result)
         list_item_label->set_justify(Gtk::Justification::LEFT);
         list_item_label->add_css_class("medius-list-item-label");
         list_item_label->set_name("medius-list-item-label");
-        list_item_box.append(*list_item_label);
+        list_item_box->append(*list_item_label);
 
         auto list_item_button =
           Gtk::make_managed<Gtk::Button>(reinterpret_cast<const char*>(
@@ -241,9 +241,9 @@ ListWidget::regenerate_done(std::string generate_result)
         list_item_button->add_css_class("medius-list-item-button");
         list_item_button->set_name("medius-list-item-button");
         list_item_button->set_size_request(32, -1);
-        list_item_box.append(*list_item_button);
+        list_item_box->append(*list_item_button);
 
-        static_cast<Gtk::Box*>(widget_box_)->append(list_item_box);
+        static_cast<Gtk::Box*>(widget_box_)->append(*list_item_box);
     }
 }
 

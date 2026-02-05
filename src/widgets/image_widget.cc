@@ -44,13 +44,13 @@ ImageWidget::ImageWidget(config::RowItem* row_item_parent,
 
     widget_ = Gtk::make_managed<Gtk::Box>(Gtk::Orientation::VERTICAL);
 
-    Gtk::Box img_box;
-    img_box.add_css_class("medius-image-box");
-    img_box.set_name("medius-image-box");
-    img_box.set_valign(Gtk::Align::FILL);
-    img_box.set_halign(Gtk::Align::FILL);
-    img_box.set_expand();
-    static_cast<Gtk::Box*>(widget_)->append(img_box);
+    auto img_box = Gtk::make_managed<Gtk::Box>();
+    img_box->add_css_class("medius-image-box");
+    img_box->set_name("medius-image-box");
+    img_box->set_valign(Gtk::Align::FILL);
+    img_box->set_halign(Gtk::Align::FILL);
+    img_box->set_expand();
+    static_cast<Gtk::Box*>(widget_)->append(*img_box);
 
     std::string set_title{ "" };
     if ((title_.length() > 0) && (!is_label_hidden_)) {
@@ -60,15 +60,15 @@ ImageWidget::ImageWidget(config::RowItem* row_item_parent,
             set_title = title_;
         }
 
-        Gtk::Label title{ set_title };
-        title.set_ellipsize(Pango::EllipsizeMode::END);
-        title.set_hexpand(false);
-        title.set_halign(Gtk::Align::FILL);
-        title.set_valign(Gtk::Align::END);
-        title.set_size_request(helper::main_config.getPanelWidth(), -1);
-        title.set_max_width_chars(5);
-        title.set_size_request(50, -1);
-        static_cast<Gtk::Box*>(widget_)->append(title);
+        auto title = Gtk::make_managed<Gtk::Label>(set_title);
+        title->set_ellipsize(Pango::EllipsizeMode::END);
+        title->set_hexpand(false);
+        title->set_halign(Gtk::Align::FILL);
+        title->set_valign(Gtk::Align::END);
+        title->set_size_request(helper::main_config.getPanelWidth(), -1);
+        title->set_max_width_chars(5);
+        title->set_size_request(50, -1);
+        static_cast<Gtk::Box*>(widget_)->append(*title);
     }
 
     for (auto classname : row_item_parent_->getRowBox()->get_css_classes()) {

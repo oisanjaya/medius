@@ -54,12 +54,12 @@ ButtonWidget::ButtonWidget(config::RowItem* row_item_parent,
         }
     }
 
-    Gtk::Box but_box;
-    but_box.add_css_class("medius-button-label-box");
-    but_box.set_name("medius-button-label-box");
-    but_box.set_orientation(Gtk::Orientation::VERTICAL);
-    but_box.set_valign(Gtk::Align::CENTER);
-    but_box.set_halign(Gtk::Align::CENTER);
+    auto but_box = Gtk::make_managed<Gtk::Box>();
+    but_box->add_css_class("medius-button-label-box");
+    but_box->set_name("medius-button-label-box");
+    but_box->set_orientation(Gtk::Orientation::VERTICAL);
+    but_box->set_valign(Gtk::Align::CENTER);
+    but_box->set_halign(Gtk::Align::CENTER);
 
     but_img_ = Gtk::make_managed<Gtk::Image>();
     but_img_->add_css_class("medius-button-image");
@@ -79,17 +79,17 @@ ButtonWidget::ButtonWidget(config::RowItem* row_item_parent,
     } else {
         but_img_->show();
     }
-    but_box.append(*but_img_);
+    but_box->append(*but_img_);
 
-    Gtk::Label but_lbl(label_);
-    but_lbl.add_css_class("medius-button-label");
-    but_lbl.set_name("medius-button-label");
+    auto but_lbl = Gtk::make_managed<Gtk::Label>(label_);
+    but_lbl->add_css_class("medius-button-label");
+    but_lbl->set_name("medius-button-label");
     if (is_label_hidden_) {
-        but_lbl.hide();
+        but_lbl->hide();
     } else {
-        but_lbl.show();
+        but_lbl->show();
     }
-    but_box.append(but_lbl);
+    but_box->append(*but_lbl);
 
     if ((on_click_on_.length() > 0) && (on_click_off_.length() > 0)) {
         but_widget_ = Gtk::make_managed<Gtk::ToggleButton>();
@@ -115,7 +115,7 @@ ButtonWidget::ButtonWidget(config::RowItem* row_item_parent,
         widget_type_ = "Button";
     }
 
-    but_widget_->set_child(but_box);
+    but_widget_->set_child(*but_box);
     but_widget_->set_hexpand();
     but_widget_->set_vexpand();
     but_widget_->set_halign(Gtk::Align::FILL);
