@@ -10,6 +10,8 @@
 #include "kdlpp.h"
 #include "widgets/base_widget.hh"
 #include "widgets/expander_item.hh"
+#include "rotated_widget.hh"
+
 #include <spdlog/spdlog.h>
 #include <string>
 
@@ -123,14 +125,13 @@ ButtonWidget::ButtonWidget(config::RowItem* row_item_parent,
 
     regenerateState();
 
-    if (expander_item_) {
-        widget_ = Gtk::make_managed<Gtk::Box>(Gtk::Orientation::HORIZONTAL, 0);
-        auto button_group_box = static_cast<Gtk::Box*>(widget_);
-        button_group_box->add_css_class("medius-row-expander-button-box");
-        button_group_box->set_name("medius-row-expander-button-box");
-        button_group_box->set_spacing(0);
-        button_group_box->append(*but_widget_);
+    auto button_group_box = Gtk::make_managed<Gtk::Box>(Gtk::Orientation::HORIZONTAL, 0);
+    button_group_box->add_css_class("medius-row-expander-button-box");
+    button_group_box->set_name("medius-row-expander-button-box");
+    button_group_box->set_spacing(0);
+    button_group_box->append(*but_widget_);
 
+    if (expander_item_) {
         Gtk::Button* expander_button = Gtk::make_managed<Gtk::Button>(">");
         expander_button->add_css_class("medius-row-expander-button");
         expander_button->set_name("medius-row-expander-button");
@@ -149,9 +150,10 @@ ButtonWidget::ButtonWidget(config::RowItem* row_item_parent,
         button_group_box->append(*expander_button);
         button_group_box->set_hexpand(true);
         button_group_box->set_halign(Gtk::Align::FILL);
-    } else {
-        widget_ = but_widget_;
     }
+
+    widget_ = Gtk::make_managed<widgets::RotatedBin>(rotation_);
+    static_cast<widgets::RotatedBin*>(widget_)->set_child(*button_group_box);
 
     regenerateState();
     if (get_state_interval_ > 0) {

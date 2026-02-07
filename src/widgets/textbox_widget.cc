@@ -45,13 +45,16 @@ TextBox::TextBox(config::RowItem* row_item_parent, const kdl::Node& node_data)
     textbox_label_->set_markup(label_);
     textbox_box->append(*textbox_label_);
 
+    auto rotated_bin = Gtk::make_managed<widgets::RotatedBin>(rotation_);
+    rotated_bin->set_child(*textbox_box);
+
     if (command_.empty()) {
-        widget_ = textbox_box;
+        widget_ = rotated_bin;
     } else {
         widget_ = Gtk::make_managed<Gtk::Button>();
         auto button_widget = reinterpret_cast<Gtk::Button*>(widget_);
         button_widget->set_has_frame(false);
-        button_widget->set_child(*textbox_box);
+        button_widget->set_child(*rotated_bin);
         button_widget->signal_clicked().connect(
           [this]() { helper::executeCommand(command_); });
     }
