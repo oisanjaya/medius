@@ -16,7 +16,6 @@
 #include <fmt/base.h>
 #include <fmt/format.h>
 #include <fstream>
-#include <iostream>
 #include <optional>
 #include <spdlog/spdlog.h>
 #include <sstream>

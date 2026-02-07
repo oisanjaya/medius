@@ -2,6 +2,8 @@
 
 #include "gtkmm/widget.h"
 #include "kdlpp.h"
+#include "rotated_widget.hh"
+
 #include <string>
 
 namespace config {
@@ -16,7 +18,7 @@ class BaseWidget
     std::string label_;
     std::string tooltip_;
     std::string label_no_space_;
-    int rotation_{ 0 };
+    WidgetRotation rotation_{ NORMAL };
 
     std::string widget_type_;
     Gtk::Widget* widget_{ nullptr };

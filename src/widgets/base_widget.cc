@@ -32,7 +32,16 @@ BaseWidget::BaseWidget(config::RowItem* row_item_parent,
                 }
             }
         } else if (child.name() == u8"rotation") {
-            rotation_ = child.args()[0].as<int>();
+            std::u8string rotation_cfg = child.args()[0].as<std::u8string>();
+            if (rotation_cfg == u8"left") {
+                rotation_ = LEFT;
+            } else if (rotation_cfg == u8"right") {
+                rotation_ = RIGHT;
+            } else if (rotation_cfg == u8"upsidedown") {
+                rotation_ = UPSIDEDOWN;
+            } else {
+                rotation_ = NORMAL;
+            }
         } else if (child.name() == u8"tooltip") {
             tooltip_ = reinterpret_cast<const char*>(
               child.args()[0].as<std::u8string>().c_str());
