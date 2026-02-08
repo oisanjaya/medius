@@ -82,7 +82,9 @@ ListWidget::ListWidget(config::RowItem* row_item_parent,
     }
 
     regenerate(true);
-    setTooltip(tooltip_);
+    if (tooltip_.length() > 0) {
+        setTooltip(tooltip_);
+    }
 };
 
 ListWidget::~ListWidget()

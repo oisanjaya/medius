@@ -8,9 +8,9 @@
 #include "gtkmm/togglebutton.h"
 #include "helper/globals.hh"
 #include "kdlpp.h"
+#include "rotated_widget.hh"
 #include "widgets/base_widget.hh"
 #include "widgets/expander_item.hh"
-#include "rotated_widget.hh"
 
 #include <spdlog/spdlog.h>
 #include <string>
@@ -125,7 +125,8 @@ ButtonWidget::ButtonWidget(config::RowItem* row_item_parent,
 
     regenerateState();
 
-    auto button_group_box = Gtk::make_managed<Gtk::Box>(Gtk::Orientation::HORIZONTAL, 0);
+    auto button_group_box =
+      Gtk::make_managed<Gtk::Box>(Gtk::Orientation::HORIZONTAL, 0);
     button_group_box->add_css_class("medius-row-expander-button-box");
     button_group_box->set_name("medius-row-expander-button-box");
     button_group_box->set_spacing(0);
@@ -165,7 +166,9 @@ ButtonWidget::ButtonWidget(config::RowItem* row_item_parent,
           get_state_interval_);
     }
 
-    setTooltip(tooltip_);
+    if (tooltip_.length() > 0) {
+        setTooltip(tooltip_);
+    }
 }
 
 ButtonWidget::~ButtonWidget() {}
