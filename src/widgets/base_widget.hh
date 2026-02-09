@@ -1,5 +1,6 @@
 #pragma once
 
+#include "glibmm/dispatcher.h"
 #include "gtkmm/widget.h"
 #include "kdlpp.h"
 #include "rotated_widget.hh"
@@ -14,9 +15,17 @@ namespace widgets {
 
 class BaseWidget
 {
+  private:
+    std::string tooltip_;
+    int tooltip_interval_{ -1 };
+    bool dynamic_tooltip_{ false };
+    std::string tooltip_result_;
+    mutable std::mutex mtx_tooltip_;
+    Glib::Dispatcher tooltip_dispatcher_;
+    sigc::connection tooltip_dispatcher_connection_;
+
   protected:
     std::string label_;
-    std::string tooltip_;
     std::string label_no_space_;
     WidgetRotation rotation_{ NORMAL };
 
@@ -35,7 +44,10 @@ class BaseWidget
     const std::string getWidgetType(void);
 
     const std::string getLabel(void);
-    void setTooltip(std::string text);
+    void setTooltip();
+    std::string getTooltip();
+    void regenerateTooltip();
+    bool isRegenerateTooltipBusy();
 };
 
 }

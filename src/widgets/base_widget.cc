@@ -43,9 +43,19 @@ BaseWidget::BaseWidget(config::RowItem* row_item_parent,
                 rotation_ = NORMAL;
             }
         } else if (child.name() == u8"tooltip") {
-            tooltip_ = reinterpret_cast<const char*>(
-              child.args()[0].as<std::u8string>().c_str());
+            std::tie(dynamic_tooltip_, tooltip_, tooltip_interval_) =
+              helper::staticOrDynamicCommand(child);
         }
+    }
+
+    regenerateTooltip();
+    if (tooltip_interval_ > 0) {
+        Glib::signal_timeout().connect_seconds(
+          [this]() -> bool {
+              regenerateTooltip();
+              return true;
+          },
+          tooltip_interval_);
     }
 }
 
@@ -70,15 +80,43 @@ BaseWidget::getWidgetType(void)
 }
 
 void
-BaseWidget::setTooltip(std::string text)
+BaseWidget::setTooltip()
 {
-    if (text.length() > 0) {
-        if (helper::isValidPangoMarkup(text)) {
-            widget_->set_tooltip_markup(text);
+    if (widget_ && (tooltip_result_.length() > 0)) {
+        if (helper::isValidPangoMarkup(tooltip_result_)) {
+            widget_->set_tooltip_markup(tooltip_result_);
         } else {
-            widget_->set_tooltip_text(text);
+            widget_->set_tooltip_text(tooltip_result_);
         }
     }
+}
+
+void
+BaseWidget::regenerateTooltip()
+{
+    if (tooltip_dispatcher_connection_.connected()) {
+        return;
+    }
+
+    if (tooltip_.length() > 0) {
+        tooltip_dispatcher_connection_ = tooltip_dispatcher_.connect([this]() {
+            std::lock_guard<std::mutex> lock(mtx_tooltip_);
+
+            setTooltip();
+
+            tooltip_dispatcher_connection_.disconnect();
+        });
+
+        std::thread([this]() {
+            std::lock_guard<std::mutex> lock(mtx_tooltip_);
+            tooltip_result_ = helper::executeCommand(tooltip_);
+            tooltip_dispatcher_.emit();
+        }).detach();
+    }
+}
+
+bool BaseWidget::isRegenerateTooltipBusy() {
+    return !tooltip_dispatcher_connection_.connected();
 }
 
 }
