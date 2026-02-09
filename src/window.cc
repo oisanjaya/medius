@@ -128,7 +128,7 @@ MainWindow::MainWindow()
     main_box->set_margin_start(helper::main_config.getPanelPadding());
     main_box->set_margin_end(helper::main_config.getPanelPadding());
     main_box->set_halign(Gtk::Align::FILL);
-    main_box->set_valign(Gtk::Align::START);
+    main_box->set_valign(Gtk::Align::FILL);
 
     if (helper::main_config.getUseLayer() != config::NORMAL) {
         if (helper::main_config.getAnchorLeft()) {
