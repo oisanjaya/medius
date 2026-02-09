@@ -248,7 +248,7 @@ Config::load(Gtk::Box* parent_box, const std::string& config)
         }
 
         if (node.name() == u8"close_on_escape") {
-            close_on_escape_ = node.args()[0].as<int>();
+            close_on_escape_ = true;
         }
 
         if (node.name() == u8"title") {
