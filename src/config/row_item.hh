@@ -32,6 +32,8 @@ class RowItem
     Gtk::Overlay* overlay_;
     Gtk::Spinner* spinner_{ nullptr };
     bool expander_busy_;
+    bool row_item_expanded_{ false };
+    bool row_item_expanded_centered_{ false };
 
     void reevaluateEnabled();
 

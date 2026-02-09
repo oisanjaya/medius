@@ -73,7 +73,6 @@ RowItem::RowItem(Gtk::Box* parent_box,
         overlay_->set_halign(Gtk::Align::FILL);
         overlay_->set_valign(Gtk::Align::FILL);
         overlay_->set_hexpand();
-        overlay_->set_vexpand();
         overlay_->set_child(*overlay_box);
         overlay_->add_overlay(*spinner_);
         expander_box_->append(*overlay_);
@@ -95,6 +94,12 @@ RowItem::RowItem(Gtk::Box* parent_box,
             for (kdl::Node row_node : child.children()) {
                 nested_rows_.push_back(std::make_shared<RowItem>(
                   nested_row, row_node, &nested_rows_, this));
+            }
+        } else if (child.name() == u8"expand") {
+            row_item_expanded_ = true;
+            if ((child.args().size() > 0) &&
+                (child.args()[0].as<std::u8string>() == u8"centered")) {
+                row_item_expanded_centered_ = true;
             }
         } else if (child.name() == u8"button") {
             auto widget = std::make_shared<widgets::ButtonWidget>(this, child);
@@ -160,6 +165,20 @@ RowItem::RowItem(Gtk::Box* parent_box,
 
         if (!is_enabled) {
             expander_box_->hide();
+        }
+    }
+
+    if (row_item_expanded_) {
+        if (row_box_->get_orientation() == Gtk::Orientation::HORIZONTAL) {
+            row_box_->set_vexpand();
+            if (row_item_expanded_centered_) {
+                row_box_->set_valign(Gtk::Align::CENTER);
+            }
+        } else {
+            row_box_->set_hexpand();
+            if (row_item_expanded_centered_) {
+                row_box_->set_halign(Gtk::Align::CENTER);
+            }
         }
     }
 }
