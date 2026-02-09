@@ -164,9 +164,7 @@ SliderWidget::SliderWidget(config::RowItem* row_item_parent,
           },
           get_state_interval_);
     }
-    if (tooltip_.length() > 0) {
-        setTooltip(tooltip_);
-    }
+    setTooltip();
 }
 
 SliderWidget::~SliderWidget()

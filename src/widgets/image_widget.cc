@@ -109,9 +109,7 @@ ImageWidget::ImageWidget(config::RowItem* row_item_parent,
           title_interval_);
     }
 
-    if (tooltip_.length() > 0) {
-        setTooltip(tooltip_);
-    }
+    setTooltip();
 }
 ImageWidget::~ImageWidget() {}
 

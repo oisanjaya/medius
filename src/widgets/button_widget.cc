@@ -166,9 +166,7 @@ ButtonWidget::ButtonWidget(config::RowItem* row_item_parent,
           get_state_interval_);
     }
 
-    if (tooltip_.length() > 0) {
-        setTooltip(tooltip_);
-    }
+    setTooltip();
 }
 
 ButtonWidget::~ButtonWidget() {}
@@ -197,7 +195,7 @@ ButtonWidget::connectGtkToggleButtonSignals()
 {
     Gtk::ToggleButton* button_widget =
       static_cast<Gtk::ToggleButton*>(but_widget_);
-    button_widget->signal_toggled().connect([this, button_widget]() {
+    button_toggle_connection_ = button_widget->signal_toggled().connect([this, button_widget]() {
         if (button_widget->get_active()) {
             helper::executeCommand(this->onClickOn());
         } else {
@@ -242,7 +240,13 @@ void
 ButtonWidget::setActive(bool active)
 {
     if (typeid(*but_widget_) == typeid(Gtk::ToggleButton)) {
+        if (button_toggle_connection_.connected()) {
+            button_toggle_connection_.block();
+        }
         static_cast<Gtk::ToggleButton*>(but_widget_)->set_active(active);
+        if (button_toggle_connection_.blocked()) {
+            button_toggle_connection_.unblock();
+        }
     }
 
     if (active) {

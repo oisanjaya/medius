@@ -418,9 +418,7 @@ SvgBox::SvgBox(config::RowItem* row_item_parent, const kdl::Node& node_data)
 
     drawingarea_widget->set_draw_func(
       sigc::mem_fun(*this, &SvgBox::on_drawingarea_draw));
-    if (tooltip_.length() > 0) {
-        setTooltip(tooltip_);
-    }
+    setTooltip();
 }
 
 void

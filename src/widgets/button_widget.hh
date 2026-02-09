@@ -24,6 +24,9 @@ class ButtonWidget : public BaseWidget
     mutable std::mutex mtx_get_state_;
     Glib::Dispatcher get_state_dispatcher_;
     sigc::connection get_state_dispatcher_connection_;
+
+    sigc::connection button_toggle_connection_;
+
     int icon_size_{ -1 };
     bool regenerate_list_{ false };
 

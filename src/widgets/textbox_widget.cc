@@ -6,6 +6,7 @@
 #include "gtkmm/object.h"
 #include "helper/globals.hh"
 #include "widgets/base_widget.hh"
+#include <spdlog/spdlog.h>
 
 namespace widgets {
 
@@ -58,9 +59,7 @@ TextBox::TextBox(config::RowItem* row_item_parent, const kdl::Node& node_data)
         button_widget->signal_clicked().connect(
           [this]() { helper::executeCommand(command_); });
     }
-    if (tooltip_.length() > 0) {
-        setTooltip(tooltip_);
-    }
+    setTooltip();
 }
 
 TextBox::~TextBox() {}

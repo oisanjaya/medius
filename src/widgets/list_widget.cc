@@ -82,9 +82,6 @@ ListWidget::ListWidget(config::RowItem* row_item_parent,
     }
 
     regenerate(true);
-    if (tooltip_.length() > 0) {
-        setTooltip(tooltip_);
-    }
 };
 
 ListWidget::~ListWidget()
@@ -247,6 +244,8 @@ ListWidget::regenerate_done(std::string generate_result)
 
         static_cast<Gtk::Box*>(widget_box_)->append(*list_item_box);
     }
+
+    setTooltip();
 }
 
 }
