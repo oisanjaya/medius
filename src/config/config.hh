@@ -17,7 +17,7 @@ class Config
     bool anchor_right_{ false };
     bool anchor_top_{ false };
     bool anchor_bottom_{ false };
-    LayerType use_layer_{ TOP };
+    LayerType use_layer_{ NORMAL };
     int padding_{ DEFAULT_PANEL_PADDING };
     int close_timeout_{ -1 };
     int close_on_escape_{ -1 };
