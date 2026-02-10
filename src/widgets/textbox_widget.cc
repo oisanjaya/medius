@@ -43,6 +43,7 @@ TextBox::TextBox(config::RowItem* row_item_parent, const kdl::Node& node_data)
     textbox_box->set_halign(Gtk::Align::FILL);
 
     textbox_label_ = Gtk::make_managed<Gtk::Label>();
+    textbox_label_->set_hexpand();
     textbox_label_->set_markup(label_);
     textbox_box->append(*textbox_label_);
 
