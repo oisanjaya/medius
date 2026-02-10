@@ -44,8 +44,15 @@ ButtonWidget::ButtonWidget(config::RowItem* row_item_parent,
             std::tie(dynamic_get_state_, get_state_, get_state_interval_) =
               helper::staticOrDynamicCommand(child);
         } else if (child.name() == u8"icon_on") {
-            icon_on_ = reinterpret_cast<const char*>(
-              child.args()[0].as<std::u8string>().c_str());
+            if (child.children().size() > 0) {
+                for (auto icon_names : child.children()) {
+                    icon_on_vector_.emplace_back(
+                      reinterpret_cast<const char*>(icon_names.name().c_str()));
+                }
+            } else {
+                icon_on_ = reinterpret_cast<const char*>(
+                  child.args()[0].as<std::u8string>().c_str());
+            }
         } else if (child.name() == u8"icon_off") {
             icon_off_ = reinterpret_cast<const char*>(
               child.args()[0].as<std::u8string>().c_str());

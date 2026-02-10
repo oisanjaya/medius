@@ -30,8 +30,22 @@ SliderWidget::SliderWidget(config::RowItem* row_item_parent,
                      button_get_state_interval_) =
               helper::staticOrDynamicCommand(child);
         } else if (child.name() == u8"icon_on") {
-            icon_on_ = reinterpret_cast<const char*>(
-              child.args()[0].as<std::u8string>().c_str());
+            if (child.children().size() > 0) {
+                icon_on_ = "{\n";
+                for (auto icon_names : child.children()) {
+                    icon_on_ +=
+                      reinterpret_cast<const char*>(icon_names.name().c_str());
+                    icon_on_ += "\n";
+                    icon_on_vector_.emplace_back(
+                      reinterpret_cast<const char*>(icon_names.name().c_str()));
+                }
+                icon_on_ += "}\n";
+            } else {
+                icon_on_ = "\"";
+                icon_on_ += reinterpret_cast<const char*>(
+                  child.args()[0].as<std::u8string>().c_str());
+                icon_on_ += "\"\n";
+            }
         } else if (child.name() == u8"icon_off") {
             icon_off_ = reinterpret_cast<const char*>(
               child.args()[0].as<std::u8string>().c_str());
@@ -75,12 +89,14 @@ SliderWidget::SliderWidget(config::RowItem* row_item_parent,
             "\"medius-slider-box_" +
             label_no_space_ + "\"\n" +
             (icon_off_ != "none" ? ("icon_off \"" + icon_off_ + "\"\n") : "") +
-            (icon_on_ != "none" ? ("icon_on \"" + icon_on_ + "\"\n") : "") +
+            (icon_on_ != "none" ? ("icon_on " + icon_on_) : "") +
             (!button_get_state_.empty()
                ? ("get_state " +
                   (button_dynamic_get_state_
-                     ? ("{\ninterval " + std::to_string(button_get_state_interval_) +
-                        "\ncommand #\"\"\"\n" + button_get_state_ + "\n\"\"\"#\n}")
+                     ? ("{\ninterval " +
+                        std::to_string(button_get_state_interval_) +
+                        "\ncommand #\"\"\"\n" + button_get_state_ +
+                        "\n\"\"\"#\n}")
                      : ("\"" + icon_on_ + "\"")) +
                   "\n")
                : "") +
@@ -95,10 +111,18 @@ SliderWidget::SliderWidget(config::RowItem* row_item_parent,
         };
 
         if (on_click_on_.length() + on_click_off_.length() > 0) {
-            auto slider_button_node =
-              kdl::parse(std::u8string(reinterpret_cast<const char8_t*>(
-                                         slider_button_node_string.data()),
-                                       slider_button_node_string.size()));
+            kdl::Document slider_button_node;
+            try {
+                slider_button_node =
+                  kdl::parse(std::u8string(reinterpret_cast<const char8_t*>(
+                                             slider_button_node_string.data()),
+                                           slider_button_node_string.size()));
+            } catch (const std::exception& ex) {
+                spdlog::error("Error program bug: SliderWidget passing "
+                              "erronous settings: \{}",
+                              slider_button_node_string);
+                std::exit(-1);
+            }
 
             slider_button_ =
               new ButtonWidget(nullptr, slider_button_node.nodes()[0]);
