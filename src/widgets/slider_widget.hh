@@ -1,6 +1,7 @@
 #pragma once
 
 #include "glibmm/dispatcher.h"
+#include "gtkmm/image.h"
 #include "gtkmm/scale.h"
 #include "kdlpp.h"
 #include "sigc++/connection.h"
@@ -17,6 +18,8 @@ class SliderWidget : public BaseWidget
     int get_state_interval_{ -1 };
     bool dynamic_get_state_{ false };
 
+    Gtk::Image* icon_widget_{ nullptr };
+    std::vector<std::string> icon_on_vector_;
     std::string icon_on_{ "none" };
     std::string icon_off_{ "none" };
     int button_get_state_interval_{ -1 };

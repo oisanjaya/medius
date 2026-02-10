@@ -7,6 +7,7 @@
 #include "kdlpp.h"
 #include "widgets/base_widget.hh"
 #include <string>
+#include <vector>
 
 namespace widgets {
 
@@ -19,6 +20,8 @@ class ButtonWidget : public BaseWidget
     std::string on_click_on_;
     std::string on_click_off_;
     std::string icon_on_{ "none" };
+    std::vector<std::string> icon_on_vector_;
+    int selected_icon_on_{ 0 };
     std::string icon_off_{ "none" };
     std::string state_result_;
     mutable std::mutex mtx_get_state_;
@@ -48,7 +51,7 @@ class ButtonWidget : public BaseWidget
     const std::string getIconOn(void);
     const std::string getIconOff(void);
 
-    void setActive(bool active = true);
+    void setActive(int active = 1);
 
     bool GetRegenerateList();
 

@@ -78,7 +78,8 @@ ButtonWidget::ButtonWidget(config::RowItem* row_item_parent,
     }
 
     if (icon_off_ == "none") {
-        but_img_->set_from_icon_name(icon_on_);
+        but_img_->set_from_icon_name(
+          icon_on_vector_.size() > 0 ? icon_on_vector_[0] : icon_on_);
     } else {
         but_img_->set_from_icon_name(icon_off_);
     }
@@ -202,21 +203,22 @@ ButtonWidget::connectGtkToggleButtonSignals()
 {
     Gtk::ToggleButton* button_widget =
       static_cast<Gtk::ToggleButton*>(but_widget_);
-    button_toggle_connection_ = button_widget->signal_toggled().connect([this, button_widget]() {
-        if (button_widget->get_active()) {
-            helper::executeCommand(this->onClickOn());
-        } else {
-            helper::executeCommand(this->onClickOff());
-        }
+    button_toggle_connection_ =
+      button_widget->signal_toggled().connect([this, button_widget]() {
+          if (button_widget->get_active()) {
+              helper::executeCommand(this->onClickOn());
+          } else {
+              helper::executeCommand(this->onClickOff());
+          }
 
-        regenerateState();
+          regenerateState();
 
-        if (regenerate_list_) {
-            if (row_item_parent_) {
-                row_item_parent_->regenerateList();
-            }
-        }
-    });
+          if (regenerate_list_) {
+              if (row_item_parent_) {
+                  row_item_parent_->regenerateList();
+              }
+          }
+      });
 }
 
 void
@@ -228,9 +230,8 @@ ButtonWidget::regenerateState()
               std::lock_guard<std::mutex> lock(mtx_get_state_);
 
               int state_number = std::stoi(state_result_);
-              bool but_active = state_number > 0;
 
-              setActive(but_active);
+              setActive(state_number);
 
               get_state_dispatcher_connection_.disconnect();
           });
@@ -244,7 +245,7 @@ ButtonWidget::regenerateState()
 }
 
 void
-ButtonWidget::setActive(bool active)
+ButtonWidget::setActive(int active)
 {
     if (typeid(*but_widget_) == typeid(Gtk::ToggleButton)) {
         if (button_toggle_connection_.connected()) {
@@ -256,8 +257,13 @@ ButtonWidget::setActive(bool active)
         }
     }
 
-    if (active) {
-        but_img_->set_from_icon_name(icon_on_);
+    if (active > 0) {
+        if (icon_on_vector_.size() > 0) {
+            but_img_->set_from_icon_name(
+              helper::selectIconOn(icon_on_vector_, active));
+        } else {
+            but_img_->set_from_icon_name(icon_on_);
+        }
     } else {
         but_img_->set_from_icon_name(icon_off_);
     }

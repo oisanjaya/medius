@@ -7,13 +7,11 @@
 #include "gtkmm/label.h"
 #include "gtkmm/object.h"
 #include "gtkmm/scale.h"
-#include "gtkmm/togglebutton.h"
 #include "helper/globals.hh"
 #include "kdlpp.h"
 #include "widgets/base_widget.hh"
 #include "widgets/button_widget.hh"
 #include "widgets/popover_widget.hh"
-#include <ranges>
 #include <spdlog/spdlog.h>
 #include <string>
 
@@ -134,13 +132,14 @@ SliderWidget::SliderWidget(config::RowItem* row_item_parent,
 
             slider_box->append(*but_widget);
         } else {
-            auto slider_image = Gtk::make_managed<Gtk::Image>();
-            slider_image->add_css_class("medius-slider-image");
-            slider_image->set_name("medius-slider-image");
-            slider_image->set_from_icon_name(icon_on_);
+            icon_widget_ = Gtk::make_managed<Gtk::Image>();
+            icon_widget_->add_css_class("medius-slider-image");
+            icon_widget_->set_name("medius-slider-image");
+            icon_widget_->set_from_icon_name(
+              icon_on_vector_.size() > 0 ? icon_on_vector_[0] : icon_on_);
 
             if (icon_on_ != "none") {
-                slider_box->append(*slider_image);
+                slider_box->append(*icon_widget_);
             }
         }
     }
@@ -158,7 +157,8 @@ SliderWidget::SliderWidget(config::RowItem* row_item_parent,
         auto slider_label = Gtk::make_managed<Gtk::Label>(label_);
         slider_label->add_css_class("medius-slider_label");
         slider_label->set_name("medius-slider_label");
-        auto slider_box_with_label = Gtk::make_managed<Gtk::Box>(Gtk::Orientation::VERTICAL);
+        auto slider_box_with_label =
+          Gtk::make_managed<Gtk::Box>(Gtk::Orientation::VERTICAL);
         slider_box_with_label->add_css_class("medius-slider-box-with-label");
         slider_box_with_label->set_name("medius-slider-box-with-label");
         slider_box_with_label->set_spacing(
@@ -228,69 +228,32 @@ SliderWidget::regenerateState()
     get_state_dispatcher_connection_ = get_state_dispatcher_.connect([this]() {
         std::lock_guard<std::mutex> lock(mtx_get_state_);
 
-        auto fields_view = state_result_ | std::views::split('\t');
-        std::vector<std::string> fields;
-        for (auto&& field : fields_view) {
-            fields.emplace_back(field.begin(), field.end());
-        }
+        try {
+            auto scale_value = std::stod(state_result_);
 
-        for (auto& field : fields) {
-            if (!field.empty()) {
-                size_t start = 0;
-                while (start < field.size() &&
-                       std::isspace(static_cast<unsigned char>(field[start]))) {
-                    ++start;
+            scale_widget_->set_value(scale_value);
+
+            if (!slider_button_ && (icon_on_vector_.size() > 0)) {
+                int vector_size = icon_on_vector_.size() - 1;
+
+                int selected_index = 0;
+                long rounded =
+                  std::lround(vector_size * (scale_value - range_low_) /
+                              (range_high_ - range_low_));
+
+                if (rounded >= std::numeric_limits<int>::min() ||
+                    rounded <= std::numeric_limits<int>::max()) {
+                    selected_index = static_cast<int>(rounded);
                 }
-                size_t end = field.size() - 1;
-                if (field.size() > 0) {
-                    while (
-                      end > start &&
-                      std::isspace(static_cast<unsigned char>(field[end]))) {
-                        --end;
-                    }
-                }
-                field = field.substr(start, end - start + 1);
-            }
-        }
 
-        if (slider_button_) {
-            Gtk::Button* but_widget =
-              static_cast<Gtk::Button*>(slider_button_->getWidget());
-            if ((typeid(*but_widget) == typeid(Gtk::ToggleButton)) &&
-                ((fields.size() >= 2))) {
-                slider_button_->setActive(fields[1] != "0");
-            } else {
-                spdlog::warn("Config file error: Slider {} widget get_state "
-                             "output doesn't conform regular pattern:\n{}",
-                             label_,
-                             state_result_);
-                spdlog::debug("filed.size(): {}", fields.size());
-                spdlog::debug("fileds[0]: '{}'",
-                              fields.size() > 0 ? fields[0] : "no field");
-                spdlog::debug("fileds[1]: '{}'",
-                              fields.size() > 1 ? fields[1] : "no field");
+                icon_widget_->set_from_icon_name(
+                  icon_on_vector_[selected_index]);
             }
-        }
-
-        bool parse_error = false;
-        if ((fields.size() > 0) && (fields[0].length() > 0)) {
-            try {
-                scale_widget_->set_value(std::stod(fields[0]));
-            } catch (...) {
-                parse_error = true;
-            }
-        } else {
-            parse_error = true;
-        }
-
-        if (parse_error) {
+        } catch (...) {
             spdlog::warn("Parse command error: set slider value; defaulting to "
                          "minimal value");
-            spdlog::debug("filed.size(): {}", fields.size());
-            spdlog::debug("fileds[0]: '{}'",
-                          fields.size() > 0 ? fields[0] : "no field");
-            spdlog::debug("fileds[1]: '{}'",
-                          fields.size() > 1 ? fields[1] : "no field");
+            spdlog::debug("returned value: {}", state_result_);
+            scale_widget_->set_value(range_low_);
         }
 
         get_state_dispatcher_connection_.disconnect();
