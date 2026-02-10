@@ -1,5 +1,6 @@
 #include "helper/globals.hh"
 #include "kdlpp.h"
+#include <cstdlib>
 #include <spdlog/spdlog.h>
 #include <string>
 
@@ -171,6 +172,27 @@ staticOrDynamicCommand(kdl::Node child)
     }
 
     return retval;
+}
+
+std::string
+selectIconOn(std::vector<std::string>& icon_vector, int value)
+{
+    if (icon_vector.size() <= 0) {
+        return "none";
+    }
+    int vector_size = icon_vector.size() - 1;
+    int selected_index = 0;
+    // Round using std::lround
+    long rounded =
+      std::lround(value / 100.0 * vector_size);
+
+    // Check for overflow before casting to int
+    if (rounded >= std::numeric_limits<int>::min() ||
+        rounded <= std::numeric_limits<int>::max()) {
+        selected_index = static_cast<int>(rounded);
+    }
+
+    return icon_vector[selected_index];
 }
 
 }

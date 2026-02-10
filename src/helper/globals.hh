@@ -38,6 +38,9 @@ StaticOrDynamicCommandTuple
 staticOrDynamicCommand(kdl::Node child);
 
 std::string
+selectIconOn(std::vector<std::string>& icon_vector, int value);
+
+std::string
 trim(const std::string& s);
 
 bool
